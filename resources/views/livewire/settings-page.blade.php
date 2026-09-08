@@ -702,7 +702,17 @@
                         <div class="card-body">
                             @forelse ($notificationDeliveries as $delivery)
                                 <div class="d-flex justify-content-between gap-3 border-bottom py-2">
-                                    <div><strong>{{ $delivery->title }}</strong><div class="text-muted fs-13">{{ $delivery->event }} · {{ $delivery->created_at?->diffForHumans() }}</div>@if($delivery->error)<div class="text-danger fs-13 text-break">{{ $delivery->error }}</div>@endif</div>
+                                    @php $rdDevice = $notificationDeliveryDevices[$delivery->id] ?? null; @endphp
+                                    <div><strong>{{ $delivery->title }}</strong>
+                                        <div class="text-muted fs-13">
+                                            {{ \App\Services\AppriseNotifications::EVENTS[$delivery->event] ?? $delivery->event }}
+                                            @if ($rdDevice)
+                                                · <a href="{{ route('devices.show', $rdDevice->id) }}">{{ trim((string) ($rdDevice->alias ?: $rdDevice->hostname)) ?: 'Device' }} ({{ $rdDevice->rustdesk_id }})</a>
+                                            @endif
+                                            · <span title="{{ $delivery->created_at?->format('Y-m-d H:i:s T') }}">{{ $delivery->created_at?->diffForHumans() }}</span>
+                                        </div>
+                                        @if($delivery->error)<div class="text-danger fs-13 text-break">{{ $delivery->error }}</div>@endif
+                                    </div>
                                     <span class="badge {{ $delivery->status === 'sent' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">{{ $delivery->status }}</span>
                                 </div>
                             @empty

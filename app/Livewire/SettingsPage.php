@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Livewire\Concerns\AuthorizesConsole;
+use App\Models\AlarmLog;
 use App\Models\ConsoleAudit;
 use App\Models\Device;
 use App\Models\DeviceGroup;
@@ -14,6 +15,7 @@ use App\Services\AppriseNotifications;
 use App\Services\MailSettings;
 use App\Services\OidcService;
 use App\Support\LoginEmailVerification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\ValidationException;
@@ -570,6 +572,48 @@ class SettingsPage extends Component
         abort_unless(auth()->user()?->is_admin, 403);
     }
 
+    /**
+     * The device behind each listed delivery, keyed by delivery id, so the
+     * row can name and link it (issue #53). The subject carries a RustDesk
+     * id for device events and an alarm id for security alarms; logins have
+     * no device. Deleted devices simply do not resolve.
+     *
+     * @param  Collection<int, NotificationDelivery>  $deliveries
+     * @return Collection<int, Device>
+     */
+    private function deliveryDevices($deliveries)
+    {
+        $rustdeskIdFor = [];
+        $alarmIds = [];
+        foreach ($deliveries as $delivery) {
+            $subject = (string) $delivery->subject;
+            if (str_starts_with($subject, 'device:')) {
+                $rustdeskIdFor[$delivery->id] = substr($subject, 7);
+            } elseif (str_starts_with($subject, 'alarm:')) {
+                $alarmIds[$delivery->id] = (int) substr($subject, 6);
+            }
+        }
+        if ($alarmIds !== []) {
+            $alarmDevice = AlarmLog::query()->whereIn('id', $alarmIds)->pluck('rustdesk_id', 'id');
+            foreach ($alarmIds as $deliveryId => $alarmId) {
+                if (isset($alarmDevice[$alarmId])) {
+                    $rustdeskIdFor[$deliveryId] = $alarmDevice[$alarmId];
+                }
+            }
+        }
+        if ($rustdeskIdFor === []) {
+            return collect();
+        }
+        $devices = Device::query()
+            ->whereIn('rustdesk_id', array_unique($rustdeskIdFor))
+            ->get(['id', 'rustdesk_id', 'alias', 'hostname'])
+            ->keyBy('rustdesk_id');
+
+        return collect($rustdeskIdFor)
+            ->map(fn (string $rustdeskId) => $devices[$rustdeskId] ?? null)
+            ->filter();
+    }
+
     public function render()
     {
         $isAdmin = (bool) auth()->user()?->is_admin;
@@ -583,7 +627,8 @@ class SettingsPage extends Component
             'appriseEventLabels' => AppriseNotifications::EVENTS,
             'appriseDeviceGroups' => DeviceGroup::query()->orderBy('name')->get(['id', 'name']),
             'appriseDevices' => Device::query()->approved()->orderByRaw("COALESCE(NULLIF(alias, ''), NULLIF(hostname, ''), rustdesk_id)")->get(['id', 'rustdesk_id', 'alias', 'hostname']),
-            'notificationDeliveries' => NotificationDelivery::query()->latest()->limit(10)->get(),
+            'notificationDeliveries' => $deliveries = NotificationDelivery::query()->latest()->limit(10)->get(),
+            'notificationDeliveryDevices' => $this->deliveryDevices($deliveries),
             'presenceSnoozes' => $isAdmin ? DevicePresenceSnooze::query()->active()->orderBy('expires_at')->get() : collect(),
             'presenceSnoozeGroups' => $isAdmin ? DeviceGroup::query()->orderBy('name')->get(['id', 'name']) : collect(),
             'presenceSnoozeDevices' => $isAdmin ? Device::query()->approved()->orderByRaw("COALESCE(NULLIF(alias, ''), NULLIF(hostname, ''), rustdesk_id)")->get(['id', 'rustdesk_id', 'alias', 'hostname']) : collect(),

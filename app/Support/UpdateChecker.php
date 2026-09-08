@@ -16,7 +16,11 @@ class UpdateChecker
 
     private const VERSION_URL = 'https://raw.githubusercontent.com/marcpope/cortendesk/main/VERSION';
 
-    public const UPGRADE_DOC = 'https://github.com/marcpope/cortendesk/wiki/How-to-Upgrade';
+    /** Release page for a version: what changed, plus the pull lines. */
+    public static function releaseNotesUrl(string $version): string
+    {
+        return 'https://github.com/marcpope/cortendesk/releases/tag/v'.$version;
+    }
 
     /** The newer version string if an upgrade is available, else null. */
     public static function upgradeAvailable(): ?string

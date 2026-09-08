@@ -32,6 +32,20 @@ class AppriseNotifications
     ];
 
     /**
+     * Apprise message type per event. Slack, Discord and the like colour the
+     * message by it (issue #53). Apprise has four: info, success, warning,
+     * failure. Anything unmapped, such as the settings test, is info.
+     */
+    public const TYPES = [
+        'device.pending_approval' => 'warning',
+        'device.offline' => 'info',
+        'device.online' => 'success',
+        'console.login_failed' => 'warning',
+        'security.alarm' => 'failure',
+        'remote_connection.failure' => 'failure',
+    ];
+
+    /**
      * Send an enabled event. The subject scopes its cooldown (a silent device
      * must not suppress a different device's security event).
      */
@@ -158,7 +172,7 @@ class AppriseNotifications
                 ->asJson()
                 ->timeout(3)
                 ->connectTimeout(1)
-                ->post($this->notifyUrl(), $this->payload($title, $body));
+                ->post($this->notifyUrl(), $this->payload($event, $title, $body));
 
             if ($response->successful()) {
                 return $this->record($event, $title, $subject, NotificationDelivery::STATUS_SENT);
@@ -184,12 +198,12 @@ class AppriseNotifications
     }
 
     /** @return array<string, mixed> */
-    private function payload(string $title, string $body): array
+    private function payload(string $event, string $title, string $body): array
     {
         $payload = [
             'title' => $title,
             'body' => $body,
-            'type' => 'warning',
+            'type' => self::TYPES[$event] ?? 'info',
         ];
 
         if ($this->mode() === self::MODE_URLS) {

@@ -22,10 +22,13 @@ class FileHealthProbeLimiter implements HealthProbeLimiter
             // most one second: that covers the tiny critical section without
             // making a health probe a long blocking request.
             $result = $store->lock($key.':lock', 1)->block(1, function () use ($store, $key, $maximumAttempts): array {
-                $attempts = (int) $store->get($key, 0) + 1;
-                // Use Repository::put so its DateTime TTL conversion preserves
-                // the one-minute expiry on Laravel's file store.
-                $store->put($key, $attempts, now()->addMinute());
+                // Fixed one-minute window: the expiry is set once, when the
+                // bucket is created, and increment() keeps it. Re-putting the
+                // key with a fresh TTL on every probe slid the window forward,
+                // so a probe every 30 s never let it expire and the counter
+                // walked up to the limit (issue #74).
+                $store->add($key, 0, now()->addMinute());
+                $attempts = (int) $store->increment($key);
 
                 return ['allowed' => $attempts <= max(1, $maximumAttempts)];
             });

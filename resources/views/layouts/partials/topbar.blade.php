@@ -35,13 +35,14 @@
 
             @if ($rdUser?->consoleAllows('setting') && ($newVersion = \App\Support\UpdateChecker::upgradeAvailable()))
                 <li class="rd-topbar-upgrade">
-                    <a class="nav-link" href="{{ \App\Support\UpdateChecker::UPGRADE_DOC }}" target="_blank" rel="noopener"
-                       data-bs-toggle="tooltip" data-bs-placement="bottom" title="Version {{ $newVersion }} is available — how to upgrade">
+                    <a class="nav-link" href="{{ \App\Support\UpdateChecker::releaseNotesUrl($newVersion) }}" target="_blank" rel="noopener"
+                       data-bs-toggle="tooltip" data-bs-placement="bottom" title="Version {{ $newVersion }} is available. Opens the release notes.">
                         {{-- The widest thing in the bar at ~150px. Below sm the icon carries
                              it alone; the tooltip and the sidebar footer still name the
-                             version, so nothing is lost. --}}
+                             version, so nothing is lost. Same label, icon and link as the
+                             sidebar badge (#67). --}}
                         <span class="rd-shell-badge">
-                            <i class="ri-download-cloud-2-line"></i><span class="d-none d-sm-inline">Upgrade Available</span>
+                            <i class="ri-download-cloud-2-line"></i><span class="d-none d-sm-inline">Update to v{{ $newVersion }}</span>
                         </span>
                     </a>
                 </li>

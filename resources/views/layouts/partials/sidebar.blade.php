@@ -221,9 +221,9 @@
             {{-- The badge only appears when it carries something the status
                  line above does not: the way to act on an upgrade. --}}
             @if ($rdUpgrade)
-                <a href="{{ \App\Support\UpdateChecker::UPGRADE_DOC }}" target="_blank" rel="noopener"
+                <a href="{{ \App\Support\UpdateChecker::releaseNotesUrl($rdUpgrade) }}" target="_blank" rel="noopener"
                    class="rd-shell-badge"
-                   title="Version {{ $rdUpgrade }} is available">Upgrade Available</a>
+                   title="Version {{ $rdUpgrade }} is available. Opens the release notes."><i class="ri-download-cloud-2-line"></i>Update to v{{ $rdUpgrade }}</a>
             @endif
         </div>
     @endif
