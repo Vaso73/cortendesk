@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RequireEmailAddress;
 use App\Http\Middleware\RequireMailHealthy;
 use App\Http\Middleware\RequireTwoFactor;
+use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\ThrottleHealthProbe;
 use App\Http\Middleware\TrustConfiguredProxies;
 use App\Models\TrustedDevice;
@@ -16,6 +17,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -41,6 +43,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'console-can' => ConsoleCan::class,
             'health-probe' => ThrottleHealthProbe::class,
         ]);
+        $middleware->prependToGroup('web', SetLocale::class);
+        // Resolution needs the session and authenticated user, while remaining
+        // ahead of every application-specific web guard.
+        $middleware->appendToPriorityList(StartSession::class, SetLocale::class);
         $middleware->appendToGroup('web', EnsureUserIsActive::class);
         // 2FA enrollment enforcement runs after the active-user check.
         $middleware->appendToGroup('web', RequireTwoFactor::class);

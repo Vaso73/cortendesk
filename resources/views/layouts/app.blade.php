@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark" data-menu-color="dark" data-topbar-color="dark" data-layout-mode="fluid" data-layout-position="fixed" data-sidenav-size="default">
+<html lang="{{ config('app.locale_metadata.html_lang', 'en') }}" dir="{{ config('app.locale_metadata.dir', 'ltr') }}" data-bs-theme="dark" data-menu-color="dark" data-topbar-color="dark" data-layout-mode="fluid" data-layout-position="fixed" data-sidenav-size="default">
 <head>
     <meta charset="utf-8"/>
     <title>@yield('title', 'Console') | {{ config('app.name') }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="CortenDesk — self-hosted RustDesk server console"/>
+    <meta name="description" content="{{ __('ui.layout.meta_description') }}"/>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="shortcut icon" href="{{ \App\Support\Asset::url('assets/images/cortendesk-sm.svg') }}">
 
@@ -62,7 +62,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="text-md-end footer-links d-none d-md-block">
-                                <span class="text-muted">Self-hosted RustDesk console</span>
+                                <span class="text-muted">{{ __('ui.layout.footer') }}</span>
                             </div>
                         </div>
                     </div>

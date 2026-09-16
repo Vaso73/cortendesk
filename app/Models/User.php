@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasLocalePreference;
 use App\Support\Permissions;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Translation\HasLocalePreference as HasLocalePreferenceContract;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,10 +20,10 @@ use Illuminate\Support\Str;
 
 #[Fillable(['username', 'name', 'email', 'password', 'avatar', 'is_admin', 'role_id', 'is_active', 'note', 'devices_columns', 'devices_sort', 'devices_sort_direction', 'setup_wizard_dismissed_at', 'setup_wizard_completed_at'])]
 #[Hidden(['password', 'remember_token', 'totp_secret'])]
-class User extends Authenticatable
+class User extends Authenticatable implements HasLocalePreferenceContract
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasLocalePreference, Notifiable;
 
     // Mirror the DB default so a freshly constructed (unsaved/unrefreshed)
     // model doesn't read as disabled (null) — EnsureUserIsActive depends on it.

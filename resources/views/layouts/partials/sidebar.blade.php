@@ -19,7 +19,7 @@
         </span>
     </a>
 
-    <div class="button-sm-hover" data-bs-toggle="tooltip" data-bs-placement="right" title="Show Full Sidebar">
+    <div class="button-sm-hover" data-bs-toggle="tooltip" data-bs-placement="right" title="{{ __('ui.sidebar.show_full_sidebar') }}">
         <i class="ri-checkbox-blank-circle-line align-middle"></i>
     </div>
 
@@ -51,19 +51,19 @@
             <li class="side-nav-item {{ request()->routeIs('overview') ? 'menuitem-active' : '' }}">
                 <a href="{{ route('overview') }}" class="side-nav-link {{ request()->routeIs('overview') ? 'active' : '' }}">
                     <i class="ri-home-4-line"></i>
-                    <span> Overview </span>
+                    <span> {{ __('ui.sidebar.nav.overview') }} </span>
                 </a>
             </li>
 
             @if ($canDevices || $canAddressBooks || $canGroups || $canUsers || $canStrategies || $canRoles)
-                <li class="side-nav-title">Manage</li>
+                <li class="side-nav-title">{{ __('ui.sidebar.section.manage') }}</li>
             @endif
 
             @if ($canDevices)
                 <li class="side-nav-item {{ request()->routeIs('devices') ? 'menuitem-active' : '' }}">
                     <a href="{{ route('devices') }}" class="side-nav-link {{ request()->routeIs('devices') ? 'active' : '' }}">
                         <i class="ri-computer-line"></i>
-                        <span> Devices </span>
+                        <span> {{ __('ui.sidebar.nav.devices') }} </span>
                     </a>
                 </li>
             @endif
@@ -72,7 +72,7 @@
                 <li class="side-nav-item {{ request()->routeIs('address-books') ? 'menuitem-active' : '' }}">
                     <a href="{{ route('address-books') }}" class="side-nav-link {{ request()->routeIs('address-books') ? 'active' : '' }}">
                         <i class="ri-contacts-book-2-line"></i>
-                        <span> Address Books </span>
+                        <span> {{ __('ui.sidebar.nav.address_books') }} </span>
                     </a>
                 </li>
             @endif
@@ -81,14 +81,14 @@
                 <li class="side-nav-item">
                     <a href="{{ route('webclient') }}" target="cortendesk-webclient" rel="noopener" class="side-nav-link">
                         <i class="ri-global-line"></i>
-                        <span> Web Client </span>
+                        <span> {{ __('ui.sidebar.nav.web_client') }} </span>
                     </a>
                 </li>
             @elseif (config('cortendesk.webclient_url'))
                 <li class="side-nav-item">
                     <a href="{{ config('cortendesk.webclient_url') }}" target="_blank" rel="noopener" class="side-nav-link">
                         <i class="ri-global-line"></i>
-                        <span> Web Client </span>
+                        <span> {{ __('ui.sidebar.nav.web_client') }} </span>
                     </a>
                 </li>
             @endif
@@ -97,7 +97,7 @@
                 <li class="side-nav-item {{ request()->routeIs('groups') ? 'menuitem-active' : '' }}">
                     <a href="{{ route('groups') }}" class="side-nav-link {{ request()->routeIs('groups') ? 'active' : '' }}">
                         <i class="ri-group-line"></i>
-                        <span> Groups </span>
+                        <span> {{ __('ui.sidebar.nav.groups') }} </span>
                     </a>
                 </li>
             @endif
@@ -106,7 +106,7 @@
                 <li class="side-nav-item {{ request()->routeIs('users') ? 'menuitem-active' : '' }}">
                     <a href="{{ route('users') }}" class="side-nav-link {{ request()->routeIs('users') ? 'active' : '' }}">
                         <i class="ri-user-settings-line"></i>
-                        <span> Users </span>
+                        <span> {{ __('ui.sidebar.nav.users') }} </span>
                     </a>
                 </li>
             @endif
@@ -117,7 +117,7 @@
                 <li class="side-nav-item {{ request()->routeIs('roles') ? 'menuitem-active' : '' }}">
                     <a href="{{ route('roles') }}" class="side-nav-link {{ request()->routeIs('roles') ? 'active' : '' }}">
                         <i class="ri-shield-user-line"></i>
-                        <span> Roles </span>
+                        <span> {{ __('ui.sidebar.nav.roles') }} </span>
                     </a>
                 </li>
             @endif
@@ -126,28 +126,28 @@
                 <li class="side-nav-item {{ request()->routeIs('strategies') ? 'menuitem-active' : '' }}">
                     <a href="{{ route('strategies') }}" class="side-nav-link {{ request()->routeIs('strategies') ? 'active' : '' }}">
                         <i class="ri-shield-keyhole-line"></i>
-                        <span> Strategies </span>
+                        <span> {{ __('ui.sidebar.nav.strategies') }} </span>
                     </a>
                 </li>
             @endif
 
             @if ($canAudit)
-                <li class="side-nav-title">Monitor</li>
+                <li class="side-nav-title">{{ __('ui.sidebar.section.monitor') }}</li>
 
                 <li class="side-nav-item {{ request()->routeIs('logs.*') ? 'menuitem-active' : '' }}">
                     <a data-bs-toggle="collapse" href="#sidebarLogs" aria-expanded="{{ request()->routeIs('logs.*') ? 'true' : 'false' }}" aria-controls="sidebarLogs" class="side-nav-link">
                         <i class="ri-file-list-3-line"></i>
-                        <span> Logs </span>
+                        <span> {{ __('ui.sidebar.nav.logs') }} </span>
                         <span class="menu-arrow"></span>
                     </a>
                     <div class="collapse {{ request()->routeIs('logs.*') ? 'show' : '' }}" id="sidebarLogs">
                         <ul class="side-nav-second-level">
-                            <li class="{{ request()->routeIs('logs.connections') ? 'menuitem-active' : '' }}"><a href="{{ route('logs.connections') }}">Connections</a></li>
-                            <li class="{{ request()->routeIs('logs.file-transfers') ? 'menuitem-active' : '' }}"><a href="{{ route('logs.file-transfers') }}">File Transfers</a></li>
-                            <li class="{{ request()->routeIs('logs.alarms') ? 'menuitem-active' : '' }}"><a href="{{ route('logs.alarms') }}">Alarms</a></li>
+                            <li class="{{ request()->routeIs('logs.connections') ? 'menuitem-active' : '' }}"><a href="{{ route('logs.connections') }}">{{ __('ui.sidebar.nav.connections') }}</a></li>
+                            <li class="{{ request()->routeIs('logs.file-transfers') ? 'menuitem-active' : '' }}"><a href="{{ route('logs.file-transfers') }}">{{ __('ui.sidebar.nav.file_transfers') }}</a></li>
+                            <li class="{{ request()->routeIs('logs.alarms') ? 'menuitem-active' : '' }}"><a href="{{ route('logs.alarms') }}">{{ __('ui.sidebar.nav.alarms') }}</a></li>
                             @if ($canAuditManage)
-                                <li class="{{ request()->routeIs('logs.logins') ? 'menuitem-active' : '' }}"><a href="{{ route('logs.logins') }}">Logins</a></li>
-                                <li class="{{ request()->routeIs('logs.console') ? 'menuitem-active' : '' }}"><a href="{{ route('logs.console') }}">Console</a></li>
+                                <li class="{{ request()->routeIs('logs.logins') ? 'menuitem-active' : '' }}"><a href="{{ route('logs.logins') }}">{{ __('ui.sidebar.nav.logins') }}</a></li>
+                                <li class="{{ request()->routeIs('logs.console') ? 'menuitem-active' : '' }}"><a href="{{ route('logs.console') }}">{{ __('ui.sidebar.nav.console') }}</a></li>
                             @endif
                         </ul>
                     </div>
@@ -155,26 +155,26 @@
             @endif
 
             @if ($canSettings)
-                <li class="side-nav-title">System</li>
+                <li class="side-nav-title">{{ __('ui.sidebar.section.system') }}</li>
 
                 <li class="side-nav-item {{ request()->routeIs('settings') ? 'menuitem-active' : '' }}">
                     <a href="{{ route('settings') }}" class="side-nav-link {{ request()->routeIs('settings') ? 'active' : '' }}">
                         <i class="ri-settings-3-line"></i>
-                        <span> Settings </span>
+                        <span> {{ __('ui.sidebar.nav.settings') }} </span>
                     </a>
                 </li>
 
                 <li class="side-nav-item {{ request()->routeIs('diagnostics*') ? 'menuitem-active' : '' }}">
                     <a href="{{ route('diagnostics') }}" class="side-nav-link {{ request()->routeIs('diagnostics*') ? 'active' : '' }}">
                         <i class="ri-pulse-line"></i>
-                        <span> Diagnostics </span>
+                        <span> {{ __('ui.sidebar.nav.diagnostics') }} </span>
                     </a>
                 </li>
 
                 <li class="side-nav-item {{ request()->routeIs('client-downloads') ? 'menuitem-active' : '' }}">
                     <a href="{{ route('client-downloads') }}" class="side-nav-link {{ request()->routeIs('client-downloads') ? 'active' : '' }}">
                         <i class="ri-download-cloud-line"></i>
-                        <span> Client Downloads </span>
+                        <span> {{ __('ui.sidebar.nav.client_downloads') }} </span>
                     </a>
                 </li>
 
@@ -185,7 +185,7 @@
                     <li class="side-nav-item">
                         <a href="{{ $rdgenUrl }}" target="_blank" rel="noopener" class="side-nav-link">
                             <i class="ri-install-line"></i>
-                            <span> Build Installers </span>
+                            <span> {{ __('ui.sidebar.nav.build_installers') }} </span>
                         </a>
                     </li>
                 @endif
@@ -205,15 +205,15 @@
         @endphp
         <div class="rd-sidebar-version">
             <span class="rd-sidebar-status {{ $rdUpgrade ? 'rd-sidebar-status-warn' : ($rdChecked ? 'rd-sidebar-status-ok' : 'rd-sidebar-status-unknown') }}"
-                  title="CortenDesk compares the running version against the latest published release.">
+                  title="{{ __('ui.sidebar.status.version_tooltip') }}">
                 <i class="rd-dot rd-dot-lg"></i>
                 <span class="rd-sidebar-status-label">
                     @if ($rdUpgrade)
-                        Update available
+                        {{ __('ui.sidebar.status.update_available') }}
                     @elseif ($rdChecked)
-                        Running the latest release
+                        {{ __('ui.sidebar.status.latest_release') }}
                     @else
-                        Release check unavailable
+                        {{ __('ui.sidebar.status.check_unavailable') }}
                     @endif
                 </span>
             </span>
@@ -223,7 +223,7 @@
             @if ($rdUpgrade)
                 <a href="{{ \App\Support\UpdateChecker::releaseNotesUrl($rdUpgrade) }}" target="_blank" rel="noopener"
                    class="rd-shell-badge"
-                   title="Version {{ $rdUpgrade }} is available. Opens the release notes."><i class="ri-download-cloud-2-line"></i>Update to v{{ $rdUpgrade }}</a>
+                   title="{{ __('ui.sidebar.status.update_tooltip', ['version' => $rdUpgrade]) }}"><i class="ri-download-cloud-2-line"></i>{{ __('ui.sidebar.status.update_to', ['version' => $rdUpgrade]) }}</a>
             @endif
         </div>
     @endif

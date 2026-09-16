@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\LocaleNormalizer;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +17,7 @@ use Illuminate\Support\Str;
  * admin chose are columns here, so the accept URL cannot carry (or forge) them.
  */
 #[Fillable([
-    'email', 'username', 'name', 'token_hash', 'is_admin',
+    'email', 'locale', 'username', 'name', 'token_hash', 'is_admin',
     'user_group_ids', 'device_group_ids', 'invited_by',
     'expires_at', 'accepted_at', 'accepted_user_id',
 ])]
@@ -65,9 +66,13 @@ class Invitation extends Model
     {
         $plain = 'inv_'.Str::random(48);
         $isAdmin = (bool) ($attributes['is_admin'] ?? false);
+        $normalizer = app(LocaleNormalizer::class);
+        $locale = $inviter?->preferredLocale()
+            ?? $normalizer->fallback();
 
         $invitation = static::create([
             'email' => $attributes['email'],
+            'locale' => $locale,
             'username' => $attributes['username'],
             'name' => ($attributes['name'] ?? '') !== '' ? $attributes['name'] : null,
             'token_hash' => hash('sha256', $plain),

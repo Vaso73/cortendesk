@@ -7,10 +7,14 @@ use App\Http\Controllers\ClientDownloadController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiagnosticsController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OidcController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\WebClientPageController;
 use Illuminate\Support\Facades\Route;
+
+// CSRF-protected web route shared by guests and authenticated users.
+Route::post('/locale', LocaleController::class)->name('locale.update');
 
 // Web-client bootstrap script (loaded by the static V1 web client pre-login)
 Route::get('/webclient-config/index.js', [WebClientController::class, 'configJs']);

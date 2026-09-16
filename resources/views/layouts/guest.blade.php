@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="{{ config('app.locale_metadata.html_lang', 'en') }}" dir="{{ config('app.locale_metadata.dir', 'ltr') }}" data-bs-theme="dark">
 <head>
     <meta charset="utf-8"/>
     <title>@yield('title', 'Sign In') | {{ config('app.name') }}</title>
@@ -22,8 +22,12 @@
 
                     @yield('content')
 
+                    <div class="d-flex justify-content-center mt-3">
+                        @include('layouts.partials.language-selector', ['localePickerId' => 'guest'])
+                    </div>
+
                     <div class="text-center mt-3">
-                        <p class="rd-auth-note">CortenDesk — self-hosted RustDesk console</p>
+                        <p class="rd-auth-note">{{ __('ui.layout.guest_note') }}</p>
                     </div>
                 </div>
             </div>

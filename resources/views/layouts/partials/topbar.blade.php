@@ -28,7 +28,7 @@
 
         @php
             $rdUser = auth()->user();
-            $rdRole = $rdUser?->is_admin ? 'Administrator' : ($rdUser?->role?->name ?? 'User');
+            $rdRole = $rdUser?->is_admin ? __('ui.topbar.administrator') : ($rdUser?->role?->name ?? __('ui.topbar.user'));
         @endphp
 
         <ul class="topbar-menu d-flex align-items-center">
@@ -48,17 +48,21 @@
                 </li>
             @endif
 
+            <li class="px-2">
+                @include('layouts.partials.language-selector', ['localePickerId' => 'topbar'])
+            </li>
+
             {{-- Reachable at every width. It used to drop below sm, which left the
                  light palette unreachable on a phone — the one screen size where
                  someone is most likely to be outdoors and want it. --}}
             <li>
-                <div class="nav-link rd-topbar-btn" id="light-dark-mode" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Theme Mode">
+                <div class="nav-link rd-topbar-btn" id="light-dark-mode" data-bs-toggle="tooltip" data-bs-placement="bottom" title="{{ __('ui.topbar.theme') }}">
                     <i class="ri-moon-line"></i>
                 </div>
             </li>
 
             <li class="d-none d-md-inline-block">
-                <a class="nav-link rd-topbar-btn" href="" data-toggle="fullscreen" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Full Screen">
+                <a class="nav-link rd-topbar-btn" href="" data-toggle="fullscreen" data-bs-toggle="tooltip" data-bs-placement="bottom" title="{{ __('ui.topbar.fullscreen') }}">
                     <i class="ri-fullscreen-line"></i>
                 </a>
             </li>
@@ -83,12 +87,12 @@
 
                     <a href="{{ route('account') }}" class="dropdown-item">
                         <i class="ri-account-circle-line"></i>
-                        <span>My Account</span>
+                        <span>{{ __('ui.topbar.account') }}</span>
                     </a>
 
                     <a href="{{ route('account.two-factor') }}" class="dropdown-item">
                         <i class="ri-shield-keyhole-line"></i>
-                        <span>Two-Factor Authentication</span>
+                        <span>{{ __('ui.topbar.two_factor') }}</span>
                     </a>
 
                     <div class="dropdown-divider"></div>
@@ -97,7 +101,7 @@
                         @csrf
                         <button type="submit" class="dropdown-item">
                             <i class="ri-logout-box-line"></i>
-                            <span>Logout</span>
+                            <span>{{ __('ui.topbar.logout') }}</span>
                         </button>
                     </form>
                 </div>

@@ -55,6 +55,6 @@ class RequireEmailAddress
             return true;
         }
 
-        return $request->routeIs('account', 'account.two-factor', 'logout');
+        return $request->routeIs('account', 'account.two-factor', 'logout', 'locale.update');
     }
 }

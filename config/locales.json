@@ -1,0 +1,33 @@
+{
+  "php_intentional_fallbacks": [
+    "ui:fallback_probe"
+  ],
+  "supported": {
+    "en": {
+      "aliases": [
+        "en-US",
+        "en-GB"
+      ],
+      "native_name": "English",
+      "html_lang": "en",
+      "dir": "ltr",
+      "web_plural_categories": [
+        "one",
+        "other"
+      ]
+    },
+    "sk": {
+      "aliases": [
+        "sk-SK"
+      ],
+      "native_name": "Slovenčina",
+      "html_lang": "sk",
+      "dir": "ltr",
+      "web_plural_categories": [
+        "one",
+        "few",
+        "other"
+      ]
+    }
+  }
+}

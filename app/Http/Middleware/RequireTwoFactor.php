@@ -65,6 +65,6 @@ class RequireTwoFactor
             return true;
         }
 
-        return $request->routeIs('account.two-factor', 'logout');
+        return $request->routeIs('account.two-factor', 'logout', 'locale.update');
     }
 }

@@ -57,6 +57,6 @@ class RequireMailHealthy
             return true;
         }
 
-        return $request->routeIs('settings', 'account', 'account.two-factor', 'logout');
+        return $request->routeIs('settings', 'account', 'account.two-factor', 'logout', 'locale.update');
     }
 }
