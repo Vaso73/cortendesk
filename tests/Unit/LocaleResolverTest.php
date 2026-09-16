@@ -234,7 +234,7 @@ class LocaleResolverTest extends TestCase
     {
         config(['app.locale' => 'en']);
 
-        $this->assertSame('sk', (new LocaleResolver(app(LocaleNormalizer::class)))->resolve(
+        $this->assertSame('es', (new LocaleResolver(app(LocaleNormalizer::class)))->resolve(
             $this->request(['HTTP_ACCEPT_LANGUAGE' => '*;q=1, en;q=0, sk;q=0.5'])
         ));
     }

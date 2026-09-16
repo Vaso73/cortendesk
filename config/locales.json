@@ -28,6 +28,36 @@
         "few",
         "other"
       ]
+    },
+    "es": {
+      "aliases": [
+        "es-ES",
+        "es-MX"
+      ],
+      "native_name": "Español",
+      "html_lang": "es",
+      "dir": "ltr",
+      "web_plural_categories": [
+        "one",
+        "many",
+        "other"
+      ],
+      "community": true
+    },
+    "de": {
+      "aliases": [
+        "de-DE",
+        "de-AT",
+        "de-CH"
+      ],
+      "native_name": "Deutsch",
+      "html_lang": "de",
+      "dir": "ltr",
+      "web_plural_categories": [
+        "one",
+        "other"
+      ],
+      "community": true
     }
   }
 }

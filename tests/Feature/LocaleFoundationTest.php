@@ -156,6 +156,65 @@ class LocaleFoundationTest extends TestCase
         }
     }
 
+    public function test_registry_declares_spanish_and_german_without_weakening_en_or_sk(): void
+    {
+        $locales = config('locales.supported');
+
+        $this->assertSame(['en', 'sk'], array_slice(array_keys($locales), 0, 2));
+        $this->assertArrayNotHasKey('community', $locales['en']);
+        $this->assertArrayNotHasKey('community', $locales['sk']);
+        $this->assertSame(['Español', ['es-ES', 'es-MX']], [$locales['es']['native_name'], $locales['es']['aliases']]);
+        $this->assertSame(['Deutsch', ['de-DE', 'de-AT', 'de-CH']], [$locales['de']['native_name'], $locales['de']['aliases']]);
+        foreach (['es', 'de'] as $locale) {
+            $this->assertTrue($locales[$locale]['community']);
+            $this->assertSame('ltr', $locales[$locale]['dir']);
+        }
+    }
+
+    public function test_registered_community_locales_are_selectable_with_sparse_catalogs_and_english_fallback(): void
+    {
+        $communityLocales = array_filter(
+            config('locales.supported'),
+            static fn (array $metadata): bool => ($metadata['community'] ?? false) === true
+        );
+        $this->assertNotEmpty($communityLocales);
+
+        foreach ($communityLocales as $locale => $metadata) {
+            foreach (glob(lang_path('en/*.php')) as $baseCatalog) {
+                $targetCatalog = lang_path($locale.'/'.basename($baseCatalog));
+                $this->assertFileExists($targetCatalog);
+                $this->assertIsArray(require $targetCatalog);
+            }
+
+            $webclientCatalog = lang_path("webclient/{$locale}.json");
+            $this->assertFileExists($webclientCatalog);
+            $this->assertIsArray(json_decode((string) file_get_contents($webclientCatalog), true, flags: JSON_THROW_ON_ERROR));
+
+            $alias = $metadata['aliases'][array_key_last($metadata['aliases'])];
+            $this->from('/login')->post('/locale', [
+                'locale' => $alias,
+                'redirect' => '/login',
+            ])->assertRedirect('/login')
+                ->assertSessionHas('locale', $locale)
+                ->assertSessionHas('status');
+
+            $response = $this->get('/login');
+            $response->assertOk();
+            $response->assertSee('<html lang="'.$metadata['html_lang'].'" dir="'.$metadata['dir'].'"', false);
+            $response->assertSee($metadata['native_name'].' — '.__('ui.locale.community_translation'));
+            $this->assertSame('English-only fallback', __('ui.fallback_probe'));
+        }
+    }
+
+    public function test_sparse_community_catalog_prefers_a_present_key_and_falls_back_per_missing_key(): void
+    {
+        app()->setLocale('de');
+        Lang::addLines(['ui.language' => 'Sprache'], 'de');
+
+        $this->assertSame('Sprache', __('ui.language'));
+        $this->assertSame('English-only fallback', __('ui.fallback_probe'));
+    }
+
     public function test_english_is_the_unchanged_default_and_missing_slovak_keys_fall_back(): void
     {
         $response = $this->get('/login');
