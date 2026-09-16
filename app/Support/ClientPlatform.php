@@ -147,14 +147,7 @@ class ClientPlatform
 
     public static function label(string $platform): string
     {
-        return match ($platform) {
-            'windows' => 'Windows',
-            'macos' => 'macOS',
-            'linux' => 'Linux',
-            'android' => 'Android',
-            'ios' => 'iOS',
-            default => 'Other',
-        };
+        return __('settings.downloads.platforms.'.(in_array($platform, self::PLATFORMS, true) ? $platform : 'unknown'));
     }
 
     public static function archLabel(?string $arch): string
@@ -164,7 +157,7 @@ class ClientPlatform
             'armv7' => 'ARMv7',
             'x86_64' => '64-bit',
             'x86' => '32-bit',
-            'universal' => 'Universal',
+            'universal' => __('settings.downloads.platforms.universal'),
             default => '',
         };
     }

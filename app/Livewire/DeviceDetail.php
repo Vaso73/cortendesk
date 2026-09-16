@@ -56,7 +56,14 @@ class DeviceDetail extends Component
     public function saveNote(): void
     {
         $this->authorizeConsole('device', 'rw');
-        $this->validate(['note' => ['nullable', 'string', 'max:1000']]);
+        $this->validate(
+            ['note' => ['nullable', 'string', 'max:1000']],
+            [
+                'string' => __('devices.validation.string'),
+                'max.string' => __('devices.validation.max_string'),
+            ],
+            ['note' => __('devices.validation.attributes.note')],
+        );
 
         $device = $this->device();
         $device->update(['note' => trim($this->note)]);

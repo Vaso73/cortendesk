@@ -45,6 +45,24 @@ class DeviceList extends Component
     /** What the table showed before it was configurable — and still the default. */
     public const DEFAULT_COLUMNS = ['device', 'alias', 'group', 'owner', 'version', 'last_seen'];
 
+    public static function pluralSelector(int $count): int
+    {
+        return match (abs($count)) {
+            1 => 1,
+            2, 3, 4 => 2,
+            default => 0,
+        };
+    }
+
+    /** @return array<string, string> */
+    public static function columnLabels(): array
+    {
+        return array_map(
+            fn (string $key): string => __('devices.columns.'.$key),
+            array_combine(array_keys(self::COLUMNS), array_keys(self::COLUMNS)),
+        );
+    }
+
     /**
      * Sort keys the browser may ask for, mapped to fixed SQL identifiers —
      * never request data, so a tampered payload cannot reach the query. The
@@ -346,7 +364,11 @@ class DeviceList extends Component
 
         $count = $devices->count();
         $this->clearSelection();
-        $this->bulkResult = $count.' '.Str::plural('device', $count).' moved to the recycle bin.';
+        $this->bulkResult = trans_choice(
+            'devices.feedback.recycled',
+            self::pluralSelector($count),
+            ['count' => $count],
+        );
     }
 
     /** Selected devices constrained to the current rendered page. */
@@ -388,7 +410,7 @@ class DeviceList extends Component
         }
 
         if ($this->moveGroupId < 0) {
-            $this->addError('moveGroupId', 'Pick a device group.');
+            $this->addError('moveGroupId', __('devices.validation.pick_group'));
 
             return;
         }
@@ -397,7 +419,7 @@ class DeviceList extends Component
             ? null
             : $this->accessibleDeviceGroups()->firstWhere('id', $this->moveGroupId);
         if ($this->moveGroupId > 0 && ! $group) {
-            $this->addError('moveGroupId', 'Pick an accessible device group.');
+            $this->addError('moveGroupId', __('devices.validation.pick_accessible_group'));
 
             return;
         }
@@ -410,7 +432,7 @@ class DeviceList extends Component
         }
 
         $targetId = $group?->id;
-        $targetName = $group?->name ?? 'No group';
+        $targetName = $group?->name ?? __('devices.common.no_group');
         $moved = 0;
         $unchanged = 0;
 
@@ -435,8 +457,11 @@ class DeviceList extends Component
         }
 
         $this->clearSelection();
-        $this->bulkResult = 'Moved '.$moved.' '.Str::plural('device', $moved).' to '.$targetName.'. '
-            .$unchanged.' unchanged.';
+        $this->bulkResult = trans_choice('devices.feedback.moved', self::pluralSelector($moved), [
+            'count' => $moved,
+            'group' => $targetName,
+            'unchanged' => $unchanged,
+        ]);
     }
 
     public function openAbPicker(): void
@@ -466,7 +491,7 @@ class DeviceList extends Component
 
         $book = $this->writableBooks()->firstWhere('id', $this->abBookId);
         if (! $book) {
-            $this->addError('abBookId', 'Pick an address book.');
+            $this->addError('abBookId', __('devices.validation.pick_address_book'));
 
             return;
         }
@@ -506,8 +531,12 @@ class DeviceList extends Component
 
         $this->abPickerOpen = false;
         $this->selected = [];
-        $this->bulkResult = 'Added '.$added.' to '.$book->name.'.'
-            .($skipped > 0 ? ' '.$skipped.' already there.' : '');
+        $this->bulkResult = trans_choice('devices.feedback.added', self::pluralSelector($added), [
+            'count' => $added,
+            'book' => $book->name,
+        ]).($skipped > 0
+            ? ' '.trans_choice('devices.feedback.already_there', self::pluralSelector($skipped), ['count' => $skipped])
+            : '');
     }
 
     /**
@@ -608,6 +637,13 @@ class DeviceList extends Component
             'formGroupId' => 'integer',
             'formUserId' => 'integer',
             'formStrategyId' => 'integer',
+        ], $this->validationMessages(), [
+            'formRustdeskId' => __('devices.validation.attributes.rustdesk_id'),
+            'formAlias' => __('devices.validation.attributes.alias'),
+            'formNote' => __('devices.validation.attributes.note'),
+            'formGroupId' => __('devices.validation.attributes.group'),
+            'formUserId' => __('devices.validation.attributes.owner'),
+            'formStrategyId' => __('devices.validation.attributes.strategy'),
         ]);
 
         $attributes = [
@@ -618,7 +654,11 @@ class DeviceList extends Component
         ];
 
         if ($this->editingId === 0) {
-            $this->validate(['formRustdeskId' => 'unique:devices,rustdesk_id']);
+            $this->validate(
+                ['formRustdeskId' => 'unique:devices,rustdesk_id'],
+                $this->validationMessages(),
+                ['formRustdeskId' => __('devices.validation.attributes.rustdesk_id')],
+            );
             Device::create($attributes + [
                 'rustdesk_id' => $data['formRustdeskId'],
                 'uuid' => '',
@@ -633,6 +673,17 @@ class DeviceList extends Component
         }
 
         $this->editingId = null;
+    }
+
+    private function validationMessages(): array
+    {
+        return [
+            'required' => __('devices.validation.required'),
+            'string' => __('devices.validation.string'),
+            'max.string' => __('devices.validation.max_string'),
+            'integer' => __('devices.validation.integer'),
+            'unique' => __('devices.validation.unique'),
+        ];
     }
 
     /**

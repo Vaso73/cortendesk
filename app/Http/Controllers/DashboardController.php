@@ -75,7 +75,7 @@ class DashboardController extends Controller
         for ($i = 0; $i < $days; $i++) {
             $date = $from->copy()->addDays($i);
             $key = $date->toDateString();
-            $labels[] = $date->format('M j');
+            $labels[] = $date->locale(app()->getLocale())->translatedFormat(__('devices.dashboard.chart_date_format'));
 
             $byType = $rows->get($key, collect())->keyBy('conn_type');
             $remote[] = (int) ($byType->get(0)->c ?? 0);
@@ -88,9 +88,9 @@ class DashboardController extends Controller
         return [
             'labels' => $labels,
             'series' => [
-                ['name' => AuditConnection::TYPE_LABELS[0], 'data' => $remote],
-                ['name' => 'File Transfer', 'data' => $file],
-                ['name' => 'Other', 'data' => $other],
+                ['name' => __('devices.dashboard.connection_types.remote_control'), 'data' => $remote],
+                ['name' => __('devices.dashboard.connection_types.file_transfer'), 'data' => $file],
+                ['name' => __('devices.dashboard.connection_types.other'), 'data' => $other],
             ],
         ];
     }
@@ -104,7 +104,7 @@ class DashboardController extends Controller
             'linux' => 'Linux',
             'android' => 'Android',
             'ios' => 'iOS',
-            'unknown' => 'Unknown',
+            'unknown' => __('devices.dashboard.unknown_platform'),
         ];
 
         $counts = Device::query()->visibleTo($user)->get()
@@ -119,7 +119,7 @@ class DashboardController extends Controller
         $values = $top->values()->all();
 
         if ($otherCount > 0) {
-            $labels[] = 'Other';
+            $labels[] = __('devices.dashboard.other');
             $values[] = $otherCount;
         }
 
@@ -138,7 +138,9 @@ class DashboardController extends Controller
             ->get();
 
         return [
-            'labels' => $rows->pluck('v')->all(),
+            'labels' => $rows->pluck('v')
+                ->map(fn ($version) => $version === 'unknown' ? __('devices.dashboard.unknown_version') : $version)
+                ->all(),
             'values' => $rows->pluck('c')->map(fn ($c) => (int) $c)->all(),
         ];
     }

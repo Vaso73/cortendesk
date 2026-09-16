@@ -95,6 +95,19 @@ class GroupList extends Component
             'device_group_ids.*' => [Rule::exists('device_groups', 'id')],
             'accessor_group_ids' => ['array'],
             'accessor_group_ids.*' => [Rule::exists('user_groups', 'id')],
+        ], [
+            'required' => __('devices.validation.required'),
+            'string' => __('devices.validation.string'),
+            'max.string' => __('devices.validation.max_string'),
+            'array' => __('devices.validation.array'),
+            'exists' => __('devices.validation.exists'),
+        ], [
+            'name' => __('devices.validation.attributes.name'),
+            'note' => __('devices.validation.attributes.note'),
+            'device_group_ids' => __('devices.validation.attributes.device_groups'),
+            'device_group_ids.*' => __('devices.validation.attributes.device_groups'),
+            'accessor_group_ids' => __('devices.validation.attributes.access_groups'),
+            'accessor_group_ids.*' => __('devices.validation.attributes.access_groups'),
         ]);
 
         $deviceGroupIds = array_map('intval', $validated['device_group_ids'] ?? []);

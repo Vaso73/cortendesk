@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Overview')
+@section('title', __('devices.pages.dashboard_title'))
 
 @section('content')
     @if (\App\Livewire\SetupWizard::shouldPrompt(auth()->user()))
         <div class="alert alert-info d-flex flex-wrap align-items-center gap-2">
             <i class="ri-guide-line fs-20"></i>
-            <div class="flex-grow-1"><strong>Connect your first device.</strong> The setup guide provides the exact RustDesk network values and confirms the first heartbeat.</div>
-            <a href="{{ route('setup') }}" class="btn btn-sm btn-primary">Open setup guide</a>
+            <div class="flex-grow-1"><strong>{{ __('devices.dashboard.connect_first') }}</strong> {{ __('devices.dashboard.setup_help') }}</div>
+            <a href="{{ route('setup') }}" class="btn btn-sm btn-primary">{{ __('devices.dashboard.open_setup') }}</a>
         </div>
     @endif
     {{-- Only shown to someone who can actually fix it. Everything listed here
@@ -16,10 +16,9 @@
         <div class="alert alert-warning d-flex align-items-start gap-2">
             <i class="ri-mail-close-line fs-20"></i>
             <div class="flex-grow-1">
-                <strong>Email is not configured.</strong>
-                User invitations cannot be sent, and emailed sign-in verification codes cannot
-                be delivered, so anyone locked out has to be recovered by an administrator by hand.
-                <a href="{{ route('settings', ['tab' => 'email']) }}" class="alert-link">Set up SMTP</a>.
+                <strong>{{ __('devices.dashboard.email_missing') }}</strong>
+                {{ __('devices.dashboard.email_missing_help') }}
+                <a href="{{ route('settings', ['tab' => 'email']) }}" class="alert-link">{{ __('devices.dashboard.setup_smtp') }}</a>.
             </div>
         </div>
     @endif
@@ -32,18 +31,18 @@
             <div class="card">
                 <div class="card-header d-flex flex-wrap align-items-center gap-2">
                     <div class="min-width-0">
-                        <h5 class="card-title">Connections</h5>
-                        <div class="rd-card-sub">Sessions per day by type · last {{ $range }} days</div>
+                        <h5 class="card-title">{{ __('devices.dashboard.connections') }}</h5>
+                        <div class="rd-card-sub">{{ __('devices.dashboard.sessions_range', ['count' => $range]) }}</div>
                     </div>
                     <div class="rd-card-actions">
-                        <div class="rd-seg" role="group" aria-label="Chart range">
+                        <div class="rd-seg" role="group" aria-label="{{ __('devices.dashboard.chart_range') }}">
                             @foreach ($ranges as $r)
                                 <a href="{{ route('overview', ['range' => $r]) }}"
                                    class="rd-seg-item {{ $r === $range ? 'active' : '' }}"
-                                   @if ($r === $range) aria-current="true" @endif>{{ $r }}D</a>
+                                   @if ($r === $range) aria-current="true" @endif>{{ __('devices.dashboard.days_short', ['count' => $r]) }}</a>
                             @endforeach
                         </div>
-                        <a href="{{ route('logs.connections') }}" class="fs-13">View log</a>
+                        <a href="{{ route('logs.connections') }}" class="fs-13">{{ __('devices.dashboard.view_log') }}</a>
                     </div>
                 </div>
                 <div class="card-body">
@@ -61,8 +60,8 @@
             @endphp
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title">Device Platforms</h5>
-                    <div class="rd-card-sub">Share of {{ $platformTotal }} {{ Str::plural('device', $platformTotal) }}</div>
+                    <h5 class="card-title">{{ __('devices.dashboard.platforms') }}</h5>
+                    <div class="rd-card-sub">{{ __('devices.dashboard.platform_share', ['devices' => trans_choice('devices.count.device', \App\Livewire\DeviceList::pluralSelector($platformTotal), ['count' => $platformTotal])]) }}</div>
                 </div>
                 <div class="card-body">
                     @if ($platformTotal > 0)
@@ -85,9 +84,9 @@
                         <div id="chart-platforms" class="d-none"></div>
                         <div class="rd-empty">
                             <div class="rd-empty-icon"><i class="ri-computer-line"></i></div>
-                            <p class="rd-empty-title">No devices yet</p>
-                            <p class="rd-empty-text">The platform mix appears once a RustDesk client checks in.</p>
-                            <a href="{{ route('devices') }}" class="btn btn-sm btn-outline-light">Go to devices</a>
+                            <p class="rd-empty-title">{{ __('devices.dashboard.no_devices') }}</p>
+                            <p class="rd-empty-text">{{ __('devices.dashboard.platform_empty_help') }}</p>
+                            <a href="{{ route('devices') }}" class="btn btn-sm btn-outline-light">{{ __('devices.dashboard.go_devices') }}</a>
                         </div>
                     @endif
                 </div>
@@ -116,11 +115,11 @@
             <div class="card">
                 <div class="card-header d-flex flex-wrap align-items-center gap-2">
                     <div class="min-width-0">
-                        <h5 class="card-title">Client Versions</h5>
-                        <div class="rd-card-sub">{{ $versionTotal > 0 ? 'Top '.count($versionCounts['labels']).' in use' : 'Reported on each heartbeat' }}</div>
+                        <h5 class="card-title">{{ __('devices.dashboard.client_versions') }}</h5>
+                        <div class="rd-card-sub">{{ $versionTotal > 0 ? __('devices.dashboard.top_versions', ['count' => count($versionCounts['labels'])]) : __('devices.dashboard.reported_heartbeat') }}</div>
                     </div>
                     <div class="rd-card-actions">
-                        <a href="{{ route('devices') }}" class="fs-13">All devices</a>
+                        <a href="{{ route('devices') }}" class="fs-13">{{ __('devices.common.all_devices') }}</a>
                     </div>
                 </div>
                 <div class="card-body">
@@ -144,8 +143,8 @@
                         @else
                             <div class="rd-empty">
                                 <div class="rd-empty-icon"><i class="ri-download-2-line"></i></div>
-                                <p class="rd-empty-title">No client versions reported</p>
-                                <p class="rd-empty-text">Clients report their version on their first heartbeat.</p>
+                                <p class="rd-empty-title">{{ __('devices.dashboard.no_versions') }}</p>
+                                <p class="rd-empty-text">{{ __('devices.dashboard.versions_help') }}</p>
                             </div>
                         @endif
                     </div>
@@ -159,11 +158,11 @@
                 <div class="card">
                     <div class="card-header d-flex flex-wrap align-items-center gap-2">
                         <div class="min-width-0">
-                            <h5 class="card-title">Alerts</h5>
-                            <div class="rd-card-sub">Last 24 hours</div>
+                            <h5 class="card-title">{{ __('devices.dashboard.alerts') }}</h5>
+                            <div class="rd-card-sub">{{ __('devices.dashboard.last_24_hours') }}</div>
                         </div>
                         <div class="rd-card-actions">
-                            <a href="{{ route('logs.alarms') }}" class="fs-13">Alarm log</a>
+                            <a href="{{ route('logs.alarms') }}" class="fs-13">{{ __('devices.dashboard.alarm_log') }}</a>
                         </div>
                     </div>
                     <div class="card-body">
@@ -180,9 +179,12 @@
                                     <li class="rd-feed-item">
                                         <span class="rd-avatar {{ $tone }}"><i class="ri-alarm-warning-line"></i></span>
                                         <div class="min-width-0">
-                                            <span class="rd-cell-title text-truncate">{{ $alarm->typeLabel() }}</span>
+                                            <span class="rd-cell-title text-truncate">
+                                                @php $alarmLabelKey = 'devices.dashboard.alarm_types.'.$alarm->typ; @endphp
+                                                {{ \Illuminate\Support\Facades\Lang::has($alarmLabelKey) ? __($alarmLabelKey) : __('devices.dashboard.unknown_alarm_type', ['type' => $alarm->typ]) }}
+                                            </span>
                                             <span class="rd-cell-sub">
-                                                {{ $alarm->rustdesk_id === \App\Models\AlarmLog::CONSOLE_SOURCE ? 'Console' : $alarm->rustdesk_id }}
+                                                {{ $alarm->rustdesk_id === \App\Models\AlarmLog::CONSOLE_SOURCE ? __('devices.common.console') : $alarm->rustdesk_id }}
                                                 · <span title="{{ $alarm->created_at }}">{{ $alarm->created_at?->diffForHumans(short: true) }}</span>
                                             </span>
                                         </div>
@@ -192,9 +194,9 @@
                         @else
                             <div class="rd-empty">
                                 <div class="rd-empty-icon"><i class="ri-shield-check-line"></i></div>
-                                <p class="rd-empty-title">Nothing to report</p>
-                                <p class="rd-empty-text">No alarms have been raised in the last 24 hours.</p>
-                                <a href="{{ route('logs.alarms') }}" class="btn btn-sm btn-outline-light">Open the alarm log</a>
+                                <p class="rd-empty-title">{{ __('devices.dashboard.nothing_report') }}</p>
+                                <p class="rd-empty-text">{{ __('devices.dashboard.no_alarms_24h') }}</p>
+                                <a href="{{ route('logs.alarms') }}" class="btn btn-sm btn-outline-light">{{ __('devices.dashboard.open_alarm_log') }}</a>
                             </div>
                         @endif
                     </div>
@@ -294,7 +296,7 @@
                 plotOptions: { pie: { donut: { size: "78%", labels: { show: true,
                     name: { fontSize: "12px", color: t.muted, offsetY: 20 },
                     value: { fontSize: "26px", fontWeight: 600, color: t.ink, offsetY: -14 },
-                    total: { show: true, label: "Devices", color: t.muted, fontSize: "12px", formatter: function (w) {
+                    total: { show: true, label: @json(trans_choice('devices.count.device_label', \App\Livewire\DeviceList::pluralSelector($platformTotal))), color: t.muted, fontSize: "12px", formatter: function (w) {
                         return w.globals.seriesTotals.reduce(function (a, b) { return a + b; }, 0);
                     } }
                 } } } },

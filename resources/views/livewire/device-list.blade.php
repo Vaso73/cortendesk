@@ -5,29 +5,29 @@
          when something is actually waiting. --}}
     <div class="rd-chiprow">
         <button type="button" class="rd-chip rd-chip-btn rd-tone-blue @if(! $trashed && ! $pendingTab && $status === 'all') rd-chip-active @endif"
-                wire:click="filterByChip('all')" title="Show every device">
+                wire:click="filterByChip('all')" title="{{ __('devices.list.show_every_device') }}">
             <i class="ri-computer-line rd-chip-icon"></i>
             <span class="rd-chip-value">{{ $totalCount }}</span>
-            <span class="rd-chip-label">Devices</span>
+            <span class="rd-chip-label">{{ trans_choice('devices.count.device_label', \App\Livewire\DeviceList::pluralSelector($totalCount)) }}</span>
         </button>
         <button type="button" class="rd-chip rd-chip-btn rd-tone-green @if(! $trashed && ! $pendingTab && $status === 'online') rd-chip-active @endif"
-                wire:click="filterByChip('online')" title="Only devices online now">
+                wire:click="filterByChip('online')" title="{{ __('devices.list.only_online') }}">
             <span class="rd-chip-dot"></span>
             <span class="rd-chip-value">{{ $onlineCount }}</span>
-            <span class="rd-chip-label">Online</span>
+            <span class="rd-chip-label">{{ __('devices.common.online') }}</span>
         </button>
         <button type="button" class="rd-chip rd-chip-btn rd-tone-muted @if(! $trashed && ! $pendingTab && $status === 'offline') rd-chip-active @endif"
-                wire:click="filterByChip('offline')" title="Only devices currently offline">
+                wire:click="filterByChip('offline')" title="{{ __('devices.list.only_offline') }}">
             <span class="rd-chip-dot"></span>
             <span class="rd-chip-value">{{ $totalCount - $onlineCount }}</span>
-            <span class="rd-chip-label">Offline</span>
+            <span class="rd-chip-label">{{ __('devices.common.offline') }}</span>
         </button>
         @if ($pendingCount > 0)
             <button type="button" class="rd-chip rd-chip-btn rd-tone-amber @if($pendingTab) rd-chip-active @endif"
-                    wire:click="openPending" title="Devices waiting for approval">
+                    wire:click="openPending" title="{{ __('devices.list.waiting_for_approval') }}">
                 <i class="ri-time-line rd-chip-icon"></i>
                 <span class="rd-chip-value">{{ $pendingCount }}</span>
-                <span class="rd-chip-label">Pending</span>
+                <span class="rd-chip-label">{{ __('devices.common.pending') }}</span>
             </button>
         @endif
     </div>
@@ -39,25 +39,25 @@
             <div class="rd-toolbar-search">
                 <div class="input-group">
                     <span class="input-group-text"><i class="ri-search-line"></i></span>
-                    <input type="search" class="form-control" placeholder="Search ID, alias, hostname, user, IP…"
+                    <input type="search" class="form-control" placeholder="{{ __('devices.list.search') }}"
                            wire:model.live.debounce.300ms="search">
                 </div>
             </div>
             <select class="form-select rd-toolbar-filter" wire:model.live="status" @disabled($trashed)>
-                <option value="all">All statuses</option>
-                <option value="online">Online</option>
-                <option value="offline">Offline</option>
+                <option value="all">{{ __('devices.list.all_statuses') }}</option>
+                <option value="online">{{ __('devices.common.online') }}</option>
+                <option value="offline">{{ __('devices.common.offline') }}</option>
             </select>
             <select class="form-select rd-toolbar-filter" wire:model.live="group">
-                <option value="0">All groups</option>
+                <option value="0">{{ __('devices.list.all_groups') }}</option>
                 @foreach ($groups as $g)
                     <option value="{{ $g->id }}">{{ $g->name }}</option>
                 @endforeach
             </select>
             @if (auth()->user()?->is_admin)
                 <select class="form-select rd-toolbar-filter" wire:model.live="owner">
-                    <option value="0">All owners</option>
-                    <option value="-1">Unassigned</option>
+                    <option value="0">{{ __('devices.list.all_owners') }}</option>
+                    <option value="-1">{{ __('devices.common.unassigned') }}</option>
                     @foreach ($users as $u)
                         <option value="{{ $u->id }}">{{ $u->username }}</option>
                     @endforeach
@@ -69,29 +69,29 @@
                 from the component's own allowlist so the two cannot drift.
             --}}
             <div class="rd-sort-mobile d-md-none">
-                <select class="form-select rd-toolbar-filter" aria-label="Sort devices by"
+                <select class="form-select rd-toolbar-filter" aria-label="{{ __('devices.list.sort_by') }}"
                         wire:change="selectSort($event.target.value)">
                     @foreach (\App\Livewire\DeviceList::SORTABLE as $key => $unused)
                         @continue($key === 'owner' && ! auth()->user()?->is_admin)
                         <option value="{{ $key }}" @selected($sortField === $key)>
-                            Sort: {{ $key === 'id' ? 'ID' : (\App\Livewire\DeviceList::COLUMNS[$key] ?? 'Status') }}
+                            {{ __('devices.list.sort_option', ['column' => $key === 'id' ? __('devices.common.id') : (\App\Livewire\DeviceList::columnLabels()[$key] ?? __('devices.common.status'))]) }}
                         </option>
                     @endforeach
                 </select>
                 <button type="button" class="btn btn-outline-light" wire:click="sortBy('{{ $sortField }}')"
-                        aria-label="Reverse sort order" title="Reverse sort order">
+                        aria-label="{{ __('devices.list.reverse_sort') }}" title="{{ __('devices.list.reverse_sort') }}">
                     <i class="{{ $sortDirection === 'asc' ? 'ri-sort-asc' : 'ri-sort-desc' }}"></i>
                 </button>
             </div>
             <div class="rd-toolbar-actions">
-                <button type="button" class="btn btn-outline-light" wire:click="resetFilters">Reset</button>
+                <button type="button" class="btn btn-outline-light" wire:click="resetFilters">{{ __('devices.common.reset') }}</button>
                 @if ($trashed)
                     <button type="button" class="btn btn-light" wire:click="$set('trashed', false)">
-                        <i class="ri-arrow-left-line"></i>Back to Devices
+                        <i class="ri-arrow-left-line"></i>{{ __('devices.pages.back_to_devices') }}
                     </button>
                 @elseif (auth()->user()?->consoleAllows('device', 'rw'))
                     <button type="button" class="btn btn-primary" wire:click="create">
-                        <i class="ri-add-line"></i>Add Device
+                        <i class="ri-add-line"></i>{{ __('devices.list.add_device') }}
                     </button>
                 @endif
             </div>
@@ -101,20 +101,20 @@
             <div class="rd-toolbar">
                 <a href="javascript:void(0);" class="fs-13 text-muted d-none d-md-inline"
                    wire:click="$toggle('columnsOpen')">
-                    <i class="ri-layout-column-line me-1"></i>Columns
+                    <i class="ri-layout-column-line me-1"></i>{{ __('devices.list.columns') }}
                 </a>
                 <a href="javascript:void(0);" class="fs-13 text-muted" wire:click="exportCsv"
-                   title="Download the current view as CSV">
-                    <i class="ri-download-2-line me-1"></i>Export CSV
+                   title="{{ __('devices.list.download_csv') }}">
+                    <i class="ri-download-2-line me-1"></i>{{ __('devices.list.export_csv') }}
                 </a>
                 @if ($pendingCount > 0)
                     <a href="javascript:void(0);" class="fs-13 text-warning fw-semibold" wire:click="$set('pendingTab', true)">
-                        <i class="ri-time-line me-1"></i>Pending approval
+                        <i class="ri-time-line me-1"></i>{{ __('devices.list.pending_approval') }}
                         <span class="badge bg-warning-subtle text-warning ms-1">{{ $pendingCount }}</span>
                     </a>
                 @endif
                 <a href="javascript:void(0);" class="fs-13 text-muted ms-auto" wire:click="$set('trashed', true)">
-                    <i class="ri-delete-bin-line me-1"></i>Recycle Bin ({{ $trashedCount }})
+                    <i class="ri-delete-bin-line me-1"></i>{{ __('devices.list.recycle_bin_count', ['count' => $trashedCount]) }}
                 </a>
             </div>
 
@@ -126,7 +126,7 @@
                 <div class="rd-toolbar d-none d-md-flex">
                     <div class="rd-inset w-100">
                         <div class="d-flex flex-wrap gap-3 align-items-center">
-                            @foreach (\App\Livewire\DeviceList::COLUMNS as $key => $label)
+                            @foreach (\App\Livewire\DeviceList::columnLabels() as $key => $label)
                                 @continue ($key === 'owner' && ! auth()->user()?->is_admin)
                                 <div class="form-check form-check-inline m-0">
                                     <input type="checkbox" class="form-check-input" id="col-{{ $key }}"
@@ -135,18 +135,18 @@
                                 </div>
                             @endforeach
                             <div class="ms-auto d-flex gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetColumns">Defaults</button>
-                                <button type="button" class="btn btn-sm btn-light" wire:click="$set('columnsOpen', false)">Done</button>
+                                <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetColumns">{{ __('devices.common.defaults') }}</button>
+                                <button type="button" class="btn btn-sm btn-light" wire:click="$set('columnsOpen', false)">{{ __('devices.common.done') }}</button>
                             </div>
                         </div>
-                        <div class="form-text">Your selection is saved to your account.</div>
+                        <div class="form-text">{{ __('devices.list.selection_saved') }}</div>
                     </div>
                 </div>
             @endif
         @else
             <div class="rd-toolbar">
                 <div class="alert alert-warning py-2 mb-0 w-100">
-                    <i class="ri-delete-bin-line me-1"></i>Recycle bin — devices here are hidden from the console and API but not destroyed.
+                    <i class="ri-delete-bin-line me-1"></i>{{ __('devices.list.recycle_notice') }}
                 </div>
             </div>
         @endunless
@@ -156,22 +156,22 @@
         @if (! $trashed && ($selected !== [] || $bulkResult !== ''))
             <div class="rd-toolbar d-flex flex-wrap gap-2 align-items-center">
                 @if ($selected !== [])
-                    <span class="fs-13 fw-semibold">{{ count($selected) }} selected</span>
+                    <span class="fs-13 fw-semibold">{{ trans_choice('devices.count.selected', \App\Livewire\DeviceList::pluralSelector(count($selected)), ['count' => count($selected)]) }}</span>
                     @if (auth()->user()?->consoleAllows('address_book', 'rw'))
                         <button type="button" class="btn btn-sm btn-light" wire:click="openAbPicker">
-                            <i class="ri-contacts-book-2-line me-1"></i>Add to Address Book…
+                            <i class="ri-contacts-book-2-line me-1"></i>{{ __('devices.list.add_to_address_book') }}
                         </button>
                     @endif
                     @if (auth()->user()?->consoleAllows('device', 'rw'))
                         <button type="button" class="btn btn-sm btn-light" wire:click="openGroupPicker">
-                            <i class="ri-folder-transfer-line me-1"></i>Move to Group…
+                            <i class="ri-folder-transfer-line me-1"></i>{{ __('devices.list.move_to_group') }}
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-danger" wire:click="bulkDelete"
-                                wire:confirm="Move {{ count($selected) }} selected device(s) to the recycle bin?">
-                            <i class="ri-delete-bin-line me-1"></i>Delete
+                                wire:confirm="{{ __('devices.confirm.bulk_recycle', ['devices' => trans_choice('devices.count.device', \App\Livewire\DeviceList::pluralSelector(count($selected)), ['count' => count($selected)])]) }}">
+                            <i class="ri-delete-bin-line me-1"></i>{{ __('devices.common.delete') }}
                         </button>
                     @endif
-                    <a href="javascript:void(0);" class="fs-13 text-muted" wire:click="clearSelection">Clear</a>
+                    <a href="javascript:void(0);" class="fs-13 text-muted" wire:click="clearSelection">{{ __('devices.common.clear') }}</a>
                 @endif
                 @if ($bulkResult !== '')
                     <span class="fs-13 text-success"><i class="ri-check-line me-1"></i>{{ $bulkResult }}</span>
@@ -189,32 +189,32 @@
                             @php $pageIds = $devices->pluck('id')->map(fn ($i) => (string) $i); @endphp
                             @if ($pageIds->isNotEmpty() && $pageIds->diff($selected)->isEmpty())
                                 <input type="checkbox" class="form-check-input" checked
-                                       wire:click="clearSelection" title="Clear selection">
+                                       wire:click="clearSelection" title="{{ __('devices.list.clear_selection') }}">
                             @else
                                 <input type="checkbox" class="form-check-input"
-                                       wire:click="selectPage" title="Select every row on this page">
+                                       wire:click="selectPage" title="{{ __('devices.list.select_page') }}">
                             @endif
                         @endunless
                     </th>
                     <x-sortable-th field="id" :sort="$sortField" :dir="$sortDirection">ID</x-sortable-th>
-                    @foreach (['device' => 'Device', 'alias' => 'Alias', 'group' => 'Group', 'owner' => 'Owner', 'version' => 'Version'] as $key => $label)
+                    @foreach (array_intersect_key(\App\Livewire\DeviceList::columnLabels(), array_flip(['device', 'alias', 'group', 'owner', 'version'])) as $key => $label)
                         @if ($cols[$key])
                             <x-sortable-th :field="$key" :sort="$sortField" :dir="$sortDirection">{{ $label }}</x-sortable-th>
                         @endif
                     @endforeach
                     @if ($cols['os'])<x-sortable-th field="os" :sort="$sortField" :dir="$sortDirection">OS</x-sortable-th>@endif
-                    @if ($cols['username'])<th>User</th>@endif
+                    @if ($cols['username'])<th>{{ __('devices.common.user') }}</th>@endif
                     @if ($cols['ip'])<th>IP</th>@endif
                     @if ($cols['cpu'])<th>CPU</th>@endif
-                    @if ($cols['memory'])<th>Memory</th>@endif
+                    @if ($cols['memory'])<th>{{ __('devices.common.memory') }}</th>@endif
                     @if ($cols['uuid'])<th>UUID</th>@endif
-                    @foreach (['first_seen' => 'First Seen', 'last_seen' => 'Last Seen'] as $key => $label)
+                    @foreach (array_intersect_key(\App\Livewire\DeviceList::columnLabels(), array_flip(['first_seen', 'last_seen'])) as $key => $label)
                         @if ($cols[$key])
                             <x-sortable-th :field="$key" :sort="$sortField" :dir="$sortDirection">{{ $label }}</x-sortable-th>
                         @endif
                     @endforeach
-                    <x-sortable-th field="status" :sort="$sortField" :dir="$sortDirection">Status</x-sortable-th>
-                    <th class="text-end">Action</th>
+                    <x-sortable-th field="status" :sort="$sortField" :dir="$sortDirection">{{ __('devices.common.status') }}</x-sortable-th>
+                    <th class="text-end">{{ __('devices.common.action') }}</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -232,7 +232,7 @@
                                 <span class="fw-semibold">{{ $device->rustdesk_id }}</span>
                             @else
                                 <a href="rustdesk://{{ $device->rustdesk_id }}" class="fw-semibold"
-                                   title="Connect with RustDesk">{{ $device->rustdesk_id }}</a>
+                                   title="{{ __('devices.list.connect_rustdesk') }}">{{ $device->rustdesk_id }}</a>
                             @endif
                         </td>
                         @if ($cols['device'])
@@ -285,26 +285,26 @@
                         @if ($cols['last_seen'])
                             <td>
                                 <span title="{{ $device->last_online_at }}">
-                                    {{ $device->last_online_at?->diffForHumans() ?? 'never' }}
+                                    {{ $device->last_online_at?->diffForHumans() ?? __('devices.common.never') }}
                                 </span>
                             </td>
                         @endif
                         <td>
                             @if ($trashed)
-                                <span class="badge bg-warning-subtle text-warning">Deleted</span>
+                                <span class="badge bg-warning-subtle text-warning">{{ __('devices.common.deleted') }}</span>
                             @elseif ($device->isOnline())
-                                <span class="badge bg-success-subtle text-success"><i class="rd-dot"></i>Online</span>
+                                <span class="badge bg-success-subtle text-success"><i class="rd-dot"></i>{{ __('devices.common.online') }}</span>
                             @else
-                                <span class="badge bg-secondary-subtle text-secondary"><i class="rd-dot"></i>Offline</span>
+                                <span class="badge bg-secondary-subtle text-secondary"><i class="rd-dot"></i>{{ __('devices.common.offline') }}</span>
                             @endif
                         </td>
                         <td class="text-end rd-rowact">
                             @if ($trashed)
                                 @if (auth()->user()?->consoleAllows('device', 'rw'))
-                                    <a href="javascript:void(0);" class="text-success me-2" wire:click="restoreDevice({{ $device->id }})">Restore</a>
+                                    <a href="javascript:void(0);" class="text-success me-2" wire:click="restoreDevice({{ $device->id }})">{{ __('devices.common.restore') }}</a>
                                     <a href="javascript:void(0);" class="text-danger"
                                        wire:click="forceDeleteDevice({{ $device->id }})"
-                                       wire:confirm="PERMANENTLY delete device {{ $device->rustdesk_id }}? This cannot be undone.">Destroy</a>
+                                       wire:confirm="{{ __('devices.confirm.destroy', ['id' => $device->rustdesk_id]) }}">{{ __('devices.common.destroy') }}</a>
                                 @endif
                             @else
                                 {{-- Row actions are neutral; only the destructive one
@@ -314,19 +314,19 @@
                                 @if (config('cortendesk.native_webclient'))
                                     <a href="{{ route('webclient') }}?id={{ $device->rustdesk_id }}"
                                        target="cortendesk-webclient" rel="noopener" class="rd-act me-2"
-                                       title="Connect in the browser (native client)"><i class="ri-remote-control-line me-1"></i>Connect</a>
+                                       title="{{ __('devices.list.connect_browser_native') }}"><i class="ri-remote-control-line me-1"></i>{{ __('devices.list.connect') }}</a>
                                 @endif
                                 @if (config('cortendesk.webclient_url'))
                                     <a href="{{ config('cortendesk.webclient_url') }}?id={{ $device->rustdesk_id }}"
                                        target="cortendesk-webclient" rel="noopener" class="rd-act me-2"
-                                       title="Connect in the browser">Web Client</a>
+                                       title="{{ __('devices.list.connect_browser') }}">{{ __('devices.list.web_client') }}</a>
                                 @endif
                                 @if (auth()->user()?->consoleAllows('device', 'rw'))
-                                    <a href="{{ route('devices.show', $device->id) }}" class="rd-act me-2" title="View details"><i class="ri-eye-line"></i></a>
-                                    <a href="javascript:void(0);" class="rd-act me-2" wire:click="edit({{ $device->id }})">Edit</a>
+                                    <a href="{{ route('devices.show', $device->id) }}" class="rd-act me-2" title="{{ __('devices.list.view_details') }}"><i class="ri-eye-line"></i></a>
+                                    <a href="javascript:void(0);" class="rd-act me-2" wire:click="edit({{ $device->id }})">{{ __('devices.common.edit') }}</a>
                                     <a href="javascript:void(0);" class="text-danger"
                                        wire:click="deleteDevice({{ $device->id }})"
-                                       wire:confirm="Move device {{ $device->rustdesk_id }} to the recycle bin?">Delete</a>
+                                       wire:confirm="{{ __('devices.confirm.recycle', ['id' => $device->rustdesk_id]) }}">{{ __('devices.common.delete') }}</a>
                                 @endif
                             @endif
                         </td>
@@ -336,16 +336,16 @@
                         <td colspan="{{ $colspan }}" class="rd-empty-cell">
                             <div class="rd-empty">
                                 <div class="rd-empty-icon"><i class="{{ $trashed ? 'ri-delete-bin-line' : 'ri-computer-line' }}"></i></div>
-                                <p class="rd-empty-title">{{ $trashed ? 'Recycle bin is empty.' : 'No devices match your filters.' }}</p>
+                                <p class="rd-empty-title">{{ $trashed ? __('devices.list.empty_bin') : __('devices.list.no_matches') }}</p>
                                 <p class="rd-empty-text">
                                     {{ $trashed
-                                        ? 'Deleted devices land here until they are destroyed for good.'
-                                        : 'Devices register themselves the first time a RustDesk client signs in to this server.' }}
+                                        ? __('devices.list.deleted_wait')
+                                        : __('devices.list.registration_help') }}
                                 </p>
                                 @unless ($trashed)
-                                    <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetFilters">Clear filters</button>
+                                    <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetFilters">{{ __('devices.list.clear_filters') }}</button>
                                     @if (auth()->user()?->consoleAllows('setting', 'r'))
-                                        <a href="{{ route('setup') }}" class="btn btn-sm btn-primary">Set up a client</a>
+                                        <a href="{{ route('setup') }}" class="btn btn-sm btn-primary">{{ __('devices.list.setup_client') }}</a>
                                     @endif
                                 @endunless
                             </div>
@@ -368,53 +368,53 @@
                                     <span class="rd-mini-title text-truncate">{{ $device->rustdesk_id }}</span>
                                 @else
                                     <a href="rustdesk://{{ $device->rustdesk_id }}" class="rd-mini-title text-truncate"
-                                       title="Connect with RustDesk">{{ $device->rustdesk_id }}</a>
+                                       title="{{ __('devices.list.connect_rustdesk') }}">{{ $device->rustdesk_id }}</a>
                                 @endif
                                 <span class="rd-mini-sub text-truncate">{{ $device->alias ?: $device->hostname }}</span>
                             </div>
                         </div>
                         @unless ($trashed)
                             <input type="checkbox" class="form-check-input flex-shrink-0" value="{{ $device->id }}"
-                                   wire:model.live="selected" aria-label="Select device {{ $device->rustdesk_id }}">
+                                   wire:model.live="selected" aria-label="{{ __('devices.list.select_device', ['id' => $device->rustdesk_id]) }}">
                         @endunless
                         @if ($trashed)
-                            <span class="badge bg-warning-subtle text-warning flex-shrink-0">Deleted</span>
+                            <span class="badge bg-warning-subtle text-warning flex-shrink-0">{{ __('devices.common.deleted') }}</span>
                         @elseif ($device->isOnline())
-                            <span class="badge bg-success-subtle text-success flex-shrink-0">Online</span>
+                            <span class="badge bg-success-subtle text-success flex-shrink-0">{{ __('devices.common.online') }}</span>
                         @else
-                            <span class="badge bg-secondary-subtle text-secondary flex-shrink-0">Offline</span>
+                            <span class="badge bg-secondary-subtle text-secondary flex-shrink-0">{{ __('devices.common.offline') }}</span>
                         @endif
                     </div>
                     <div class="rd-mini-foot">
                         <span class="rd-mini-sub min-width-0">
                             {{ $device->username }} · v{{ $device->version ?: '?' }} ·
-                            <span class="text-nowrap">{{ $device->last_online_at?->diffForHumans(short: true) ?? 'never' }}</span>
+                            <span class="text-nowrap">{{ $device->last_online_at?->diffForHumans(short: true) ?? __('devices.common.never') }}</span>
                         </span>
                         <div class="rd-mini-acts">
                             @if ($trashed)
                                 @if (auth()->user()?->consoleAllows('device', 'rw'))
-                                    <a href="javascript:void(0);" class="rd-iconbtn text-success" title="Restore" wire:click="restoreDevice({{ $device->id }})"><i class="ri-arrow-go-back-line"></i></a>
-                                    <a href="javascript:void(0);" class="rd-iconbtn text-danger" title="Destroy"
+                                    <a href="javascript:void(0);" class="rd-iconbtn text-success" title="{{ __('devices.common.restore') }}" wire:click="restoreDevice({{ $device->id }})"><i class="ri-arrow-go-back-line"></i></a>
+                                    <a href="javascript:void(0);" class="rd-iconbtn text-danger" title="{{ __('devices.common.destroy') }}"
                                        wire:click="forceDeleteDevice({{ $device->id }})"
-                                       wire:confirm="PERMANENTLY delete device {{ $device->rustdesk_id }}?"><i class="ri-close-circle-line"></i></a>
+                                       wire:confirm="{{ __('devices.confirm.destroy_short', ['id' => $device->rustdesk_id]) }}"><i class="ri-close-circle-line"></i></a>
                                 @endif
                             @else
                                 @if (config('cortendesk.native_webclient'))
                                     <a href="{{ route('webclient') }}?id={{ $device->rustdesk_id }}"
                                        target="cortendesk-webclient" rel="noopener" class="rd-iconbtn"
-                                       title="Connect in the browser (native client)"><i class="ri-remote-control-line"></i></a>
+                                       title="{{ __('devices.list.connect_browser_native') }}"><i class="ri-remote-control-line"></i></a>
                                 @endif
                                 @if (config('cortendesk.webclient_url'))
                                     <a href="{{ config('cortendesk.webclient_url') }}?id={{ $device->rustdesk_id }}"
                                        target="cortendesk-webclient" rel="noopener" class="rd-iconbtn"
-                                       title="Connect in the browser"><i class="ri-global-line"></i></a>
+                                       title="{{ __('devices.list.connect_browser') }}"><i class="ri-global-line"></i></a>
                                 @endif
                                 @if (auth()->user()?->consoleAllows('device', 'rw'))
-                                    <a href="{{ route('devices.show', $device->id) }}" class="rd-iconbtn" title="View details"><i class="ri-eye-line"></i></a>
-                                    <a href="javascript:void(0);" class="rd-iconbtn" title="Edit" wire:click="edit({{ $device->id }})"><i class="ri-pencil-line"></i></a>
-                                    <a href="javascript:void(0);" class="rd-iconbtn text-danger" title="Delete"
+                                    <a href="{{ route('devices.show', $device->id) }}" class="rd-iconbtn" title="{{ __('devices.list.view_details') }}"><i class="ri-eye-line"></i></a>
+                                    <a href="javascript:void(0);" class="rd-iconbtn" title="{{ __('devices.common.edit') }}" wire:click="edit({{ $device->id }})"><i class="ri-pencil-line"></i></a>
+                                    <a href="javascript:void(0);" class="rd-iconbtn text-danger" title="{{ __('devices.common.delete') }}"
                                        wire:click="deleteDevice({{ $device->id }})"
-                                       wire:confirm="Move device {{ $device->rustdesk_id }} to the recycle bin?"><i class="ri-delete-bin-line"></i></a>
+                                       wire:confirm="{{ __('devices.confirm.recycle', ['id' => $device->rustdesk_id]) }}"><i class="ri-delete-bin-line"></i></a>
                                 @endif
                             @endif
                         </div>
@@ -423,16 +423,16 @@
             @empty
                 <div class="rd-empty">
                     <div class="rd-empty-icon"><i class="{{ $trashed ? 'ri-delete-bin-line' : 'ri-computer-line' }}"></i></div>
-                    <p class="rd-empty-title">{{ $trashed ? 'Recycle bin is empty.' : 'No devices match your filters.' }}</p>
+                    <p class="rd-empty-title">{{ $trashed ? __('devices.list.empty_bin') : __('devices.list.no_matches') }}</p>
                     <p class="rd-empty-text">
                         {{ $trashed
-                            ? 'Deleted devices land here until they are destroyed for good.'
-                            : 'Devices register themselves the first time a RustDesk client signs in to this server.' }}
+                            ? __('devices.list.deleted_wait')
+                            : __('devices.list.registration_help') }}
                     </p>
                     @unless ($trashed)
-                        <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetFilters">Clear filters</button>
+                        <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetFilters">{{ __('devices.list.clear_filters') }}</button>
                         @if (auth()->user()?->consoleAllows('setting', 'r'))
-                            <a href="{{ route('setup') }}" class="btn btn-sm btn-primary">Set up a client</a>
+                            <a href="{{ route('setup') }}" class="btn btn-sm btn-primary">{{ __('devices.list.setup_client') }}</a>
                         @endif
                     @endunless
                 </div>
@@ -440,7 +440,7 @@
         </div>
 
         <div class="rd-tablefoot">
-            <span>Showing {{ $devices->firstItem() ?? 0 }}–{{ $devices->lastItem() ?? 0 }} of {{ $devices->total() }}</span>
+            <span>{{ __('devices.list.showing', ['first' => $devices->firstItem() ?? 0, 'last' => $devices->lastItem() ?? 0, 'total' => $devices->total()]) }}</span>
             {{ $devices->links() }}
         </div>
     </div>
@@ -452,29 +452,27 @@
                 <div class="modal-content">
                     <form wire:submit="addSelectedToBook">
                         <div class="modal-header">
-                            <h5 class="modal-title">Add {{ count($selected) }} {{ Str::plural('device', count($selected)) }} to an address book</h5>
+                            <h5 class="modal-title">{{ __('devices.list.address_book_title', ['devices' => trans_choice('devices.count.device', \App\Livewire\DeviceList::pluralSelector(count($selected)), ['count' => count($selected)])]) }}</h5>
                             <button type="button" class="btn-close" wire:click="closeAbPicker"></button>
                         </div>
                         <div class="modal-body">
-                            <label class="form-label">Address book</label>
+                            <label class="form-label">{{ __('devices.list.address_book') }}</label>
                             <select class="form-select @error('abBookId') is-invalid @enderror" wire:model="abBookId">
-                                <option value="0">Choose…</option>
+                                <option value="0">{{ __('devices.common.choose') }}</option>
                                 @foreach ($books as $book)
                                     <option value="{{ $book->id }}">
-                                        {{ $book->name }}{{ $book->is_personal ? ' (personal)' : '' }}
+                                        {{ $book->name }}{{ $book->is_personal ? __('devices.list.personal_suffix', ['label' => __('devices.common.personal')]) : '' }}
                                     </option>
                                 @endforeach
                             </select>
                             @error('abBookId') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             <div class="form-text">
-                                Only books you can add entries to are listed. Devices already in the
-                                chosen book are skipped, and each entry carries the device's alias,
-                                hostname, platform and user.
+                                {{ __('devices.list.address_book_help') }}
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-light" wire:click="closeAbPicker">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add</button>
+                            <button type="button" class="btn btn-light" wire:click="closeAbPicker">{{ __('devices.common.cancel') }}</button>
+                            <button type="submit" class="btn btn-primary">{{ __('devices.common.add') }}</button>
                         </div>
                     </form>
                 </div>
@@ -491,37 +489,37 @@
                 <div class="modal-content">
                     <form wire:submit="save">
                         <div class="modal-header">
-                            <h5 class="modal-title">{{ $editingId === 0 ? 'Add Device' : 'Edit Device' }}</h5>
+                            <h5 class="modal-title">{{ $editingId === 0 ? __('devices.list.add_device') : __('devices.list.edit_device') }}</h5>
                             <button type="button" class="btn-close" wire:click="closeModal"></button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label class="form-label">RustDesk ID</label>
+                                <label class="form-label">{{ __('devices.common.rustdesk_id') }}</label>
                                 <input type="text" class="form-control @error('formRustdeskId') is-invalid @enderror"
                                        wire:model="formRustdeskId" @disabled($editingId !== 0)>
                                 @error('formRustdeskId') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 @if ($editingId === 0)
-                                    <div class="form-text">Pre-register a device by its RustDesk ID; details fill in when it first reports.</div>
+                                    <div class="form-text">{{ __('devices.list.pre_register_help') }}</div>
                                 @endif
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Alias</label>
-                                <input type="text" class="form-control" wire:model="formAlias" placeholder="Friendly name">
+                                <label class="form-label">{{ __('devices.common.alias') }}</label>
+                                <input type="text" class="form-control" wire:model="formAlias" placeholder="{{ __('devices.list.friendly_name') }}">
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Group</label>
+                                    <label class="form-label">{{ __('devices.common.group') }}</label>
                                     <select class="form-select" wire:model="formGroupId">
-                                        <option value="0">No group</option>
+                                        <option value="0">{{ __('devices.common.no_group') }}</option>
                                         @foreach ($groups as $g)
                                             <option value="{{ $g->id }}">{{ $g->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Owner</label>
+                                    <label class="form-label">{{ __('devices.common.owner') }}</label>
                                     <select class="form-select" wire:model="formUserId">
-                                        <option value="0">Unassigned</option>
+                                        <option value="0">{{ __('devices.common.unassigned') }}</option>
                                         @foreach ($users as $u)
                                             <option value="{{ $u->id }}">{{ $u->username }}</option>
                                         @endforeach
@@ -529,58 +527,58 @@
                                 </div>
                             </div>
                             <div class="mb-1">
-                                <label class="form-label">Note</label>
+                                <label class="form-label">{{ __('devices.common.note') }}</label>
                                 <textarea class="form-control" rows="2" wire:model="formNote" maxlength="500"></textarea>
                             </div>
 
                             {{-- Effective strategy inspector (PLAN C4) --}}
                             @if ($editingId !== 0 && auth()->user()?->is_admin && $strategyExplain)
                                 <hr class="my-3">
-                                <label class="form-label" for="dl-strategy">Strategy</label>
+                                <label class="form-label" for="dl-strategy">{{ __('devices.common.strategy') }}</label>
                                 <select id="dl-strategy" class="form-select" wire:model="formStrategyId">
-                                    <option value="0">Inherit (owner, group, or default)</option>
+                                    <option value="0">{{ __('devices.list.inherit_strategy') }}</option>
                                     @foreach ($strategies as $s)
                                         <option value="{{ $s->id }}">
-                                            {{ $s->name }}@unless ($s->enabled) (disabled)@endunless
+                                            {{ $s->name }}@unless ($s->enabled){{ __('devices.list.disabled_suffix') }}@endunless
                                         </option>
                                     @endforeach
                                 </select>
-                                <div class="form-text">A strategy set here wins over the owner's, the group's and the default.</div>
+                                <div class="form-text">{{ __('devices.list.strategy_priority_help') }}</div>
 
                                 <div class="mt-2 rd-inset">
                                     <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-                                        <span class="fs-13 text-muted">In force now</span>
+                                        <span class="fs-13 text-muted">{{ __('devices.list.in_force') }}</span>
                                         @if ($strategyExplain['resolved'])
                                             <span class="badge bg-success-subtle text-success">{{ $strategyExplain['resolved']->name }}</span>
                                         @else
-                                            <span class="badge bg-secondary-subtle text-secondary">None</span>
+                                            <span class="badge bg-secondary-subtle text-secondary">{{ __('devices.common.none') }}</span>
                                         @endif
                                     </div>
                                     <ul class="list-unstyled mb-0 mt-2 fs-13">
                                         @foreach ($strategyExplain['steps'] as $step)
                                             <li class="d-flex justify-content-between align-items-start gap-2 py-1 border-top">
                                                 <span class="text-muted">
-                                                    {{ $step['label'] }}@if ($step['target'])<span class="text-body"> · {{ $step['target'] }}</span>@endif
+                                                    {{ __('devices.list.strategy_levels.'.$step['level']) }}@if ($step['target'])<span class="text-body"> · {{ $step['target'] }}</span>@endif
                                                 </span>
                                                 <span class="text-end">
                                                     @switch ($step['state'])
                                                         @case ('applied')
                                                             <span class="fw-semibold">{{ $step['strategy']->name }}</span>
-                                                            <span class="badge bg-success-subtle text-success ms-1">Wins</span>
+                                                            <span class="badge bg-success-subtle text-success ms-1">{{ __('devices.list.wins') }}</span>
                                                             @break
                                                         @case ('overridden')
                                                             <span>{{ $step['strategy']->name }}</span>
-                                                            <span class="badge bg-secondary-subtle text-secondary ms-1">Overridden</span>
+                                                            <span class="badge bg-secondary-subtle text-secondary ms-1">{{ __('devices.list.overridden') }}</span>
                                                             @break
                                                         @case ('disabled')
                                                             <span>{{ $step['strategy']->name }}</span>
-                                                            <span class="badge bg-warning-subtle text-warning ms-1">Disabled — skipped</span>
+                                                            <span class="badge bg-warning-subtle text-warning ms-1">{{ __('devices.list.disabled_skipped') }}</span>
                                                             @break
                                                         @case ('unset')
-                                                            <span class="text-muted">Not set</span>
+                                                            <span class="text-muted">{{ __('devices.list.not_set') }}</span>
                                                             @break
                                                         @default
-                                                            <span class="text-muted">No strategy</span>
+                                                            <span class="text-muted">{{ __('devices.list.no_strategy') }}</span>
                                                     @endswitch
                                                 </span>
                                             </li>
@@ -588,19 +586,19 @@
                                     </ul>
                                     @if ($strategyExplain['acked_at'])
                                         <div class="fs-13 text-muted mt-2">
-                                            Device last confirmed a policy {{ $strategyExplain['acked_at']->diffForHumans() }}.
+                                            {{ __('devices.list.policy_confirmed', ['time' => $strategyExplain['acked_at']->diffForHumans()]) }}
                                         </div>
                                     @elseif ($strategyExplain['resolved'])
                                         <div class="fs-13 text-muted mt-2">
-                                            Not confirmed by the device yet — it applies on its next heartbeat.
+                                            {{ __('devices.list.policy_pending') }}
                                         </div>
                                     @endif
                                 </div>
                             @endif
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-light" wire:click="closeModal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">{{ $editingId === 0 ? 'Add Device' : 'Save Changes' }}</button>
+                            <button type="button" class="btn btn-light" wire:click="closeModal">{{ __('devices.common.cancel') }}</button>
+                            <button type="submit" class="btn btn-primary">{{ $editingId === 0 ? __('devices.list.add_device') : __('devices.common.save_changes') }}</button>
                         </div>
                     </form>
                 </div>
@@ -615,24 +613,24 @@
                 <div class="modal-content">
                     <form wire:submit="moveSelectedToGroup">
                         <div class="modal-header">
-                            <h5 id="move-group-title" class="modal-title">Move {{ count($selected) }} {{ Str::plural('device', count($selected)) }} to a group</h5>
-                            <button type="button" class="btn-close" aria-label="Close move to group dialog" wire:click="closeGroupPicker"></button>
+                            <h5 id="move-group-title" class="modal-title">{{ __('devices.list.move_title', ['devices' => trans_choice('devices.count.device', \App\Livewire\DeviceList::pluralSelector(count($selected)), ['count' => count($selected)])]) }}</h5>
+                            <button type="button" class="btn-close" aria-label="{{ __('devices.list.close_move_dialog') }}" wire:click="closeGroupPicker"></button>
                         </div>
                         <div class="modal-body">
-                            <label class="form-label" for="move-group-id">Device group</label>
+                            <label class="form-label" for="move-group-id">{{ __('devices.list.device_group') }}</label>
                             <select id="move-group-id" class="form-select @error('moveGroupId') is-invalid @enderror" wire:model="moveGroupId">
-                                <option value="-1">Choose…</option>
-                                <option value="0">No group</option>
+                                <option value="-1">{{ __('devices.common.choose') }}</option>
+                                <option value="0">{{ __('devices.common.no_group') }}</option>
                                 @foreach ($groups as $group)
                                     <option value="{{ $group->id }}">{{ $group->name }}</option>
                                 @endforeach
                             </select>
                             @error('moveGroupId') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            <div class="form-text">Only device groups you can access are listed.</div>
+                            <div class="form-text">{{ __('devices.list.accessible_groups_only') }}</div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-light" wire:click="closeGroupPicker">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Move</button>
+                            <button type="button" class="btn btn-light" wire:click="closeGroupPicker">{{ __('devices.common.cancel') }}</button>
+                            <button type="submit" class="btn btn-primary">{{ __('devices.common.move') }}</button>
                         </div>
                     </form>
                 </div>
