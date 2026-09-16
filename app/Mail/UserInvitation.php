@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Invitation;
+use App\Support\LocaleNormalizer;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -14,15 +15,21 @@ class UserInvitation extends Mailable
         public Invitation $invitation,
         public string $acceptUrl,
         public string $invitedBy,
-    ) {}
+    ) {
+        $normalizer = app(LocaleNormalizer::class);
+        $this->locale($normalizer->normalize($invitation->locale)
+            ?? $normalizer->fallback());
+    }
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'You have been invited to '.config('app.name'));
+        return new Envelope(subject: __('notifications.mail.invitation.subject', [
+            'app' => config('app.name'),
+        ]));
     }
 
     public function content(): Content
     {
-        return new Content(view: 'mail.invitation');
+        return new Content(view: 'mail.invitation', text: 'mail.invitation-text');
     }
 }

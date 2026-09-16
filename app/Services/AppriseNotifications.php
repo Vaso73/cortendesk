@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\AlarmLog;
 use App\Models\Device;
 use App\Models\NotificationDelivery;
 use App\Models\Setting;
+use App\Support\LocaleNormalizer;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
@@ -23,12 +25,12 @@ class AppriseNotifications
     public const MODE_URLS = 'urls';
 
     public const EVENTS = [
-        'device.pending_approval' => 'Device pending approval',
-        'device.offline' => 'Device offline',
-        'device.online' => 'Device recovered',
-        'console.login_failed' => 'Failed console login',
-        'security.alarm' => 'Security alarm',
-        'remote_connection.failure' => 'Repeated remote connection failure',
+        'device.pending_approval' => 'notifications.events.device_pending_approval',
+        'device.offline' => 'notifications.events.device_offline',
+        'device.online' => 'notifications.events.device_online',
+        'console.login_failed' => 'notifications.events.console_login_failed',
+        'security.alarm' => 'notifications.events.security_alarm',
+        'remote_connection.failure' => 'notifications.events.remote_connection_failure',
     ];
 
     /**
@@ -51,6 +53,13 @@ class AppriseNotifications
      */
     public function send(string $event, string $title, string $body, ?string $subject = null, ?Device $device = null): ?NotificationDelivery
     {
+        return $this->withNotificationLocale(
+            fn (): ?NotificationDelivery => $this->sendInCurrentLocale($event, $title, $body, $subject, $device),
+        );
+    }
+
+    private function sendInCurrentLocale(string $event, string $title, string $body, ?string $subject, ?Device $device): ?NotificationDelivery
+    {
         if (! $this->isEnabledFor($event) || ! $this->allowsDevice($event, $device)) {
             return null;
         }
@@ -65,7 +74,9 @@ class AppriseNotifications
             return null;
         }
 
-        return $this->deliver($event, $title, $body, $subject);
+        [$localizedTitle, $localizedBody] = $this->localizeEvent($event, $title, $body, $device);
+
+        return $this->deliver($event, $localizedTitle, $localizedBody, $subject);
     }
 
     /**
@@ -89,20 +100,24 @@ class AppriseNotifications
             return;
         }
 
-        dispatch(function () use ($event, $title, $body, $subject, $device): void {
-            $this->send($event, $title, $body, $subject, $device);
+        $locale = $this->notificationLocale();
+        dispatch(function () use ($event, $title, $body, $subject, $device, $locale): void {
+            $this->withNotificationLocale(
+                fn () => $this->sendInCurrentLocale($event, $title, $body, $subject, $device),
+                $locale,
+            );
         })->afterResponse();
     }
 
     /** Send a saved-config test regardless of the event switches. */
     public function test(): NotificationDelivery
     {
-        return $this->deliver(
+        return $this->withNotificationLocale(fn (): NotificationDelivery => $this->deliver(
             'test',
-            'CortenDesk notification test',
-            'This is a test notification from '.config('app.name').'.',
+            __('notifications.apprise.test.title', ['app' => config('app.name')]),
+            __('notifications.apprise.test.body', ['app' => config('app.name')]),
             'settings-test',
-        );
+        ));
     }
 
     public function isConfigured(): bool
@@ -160,7 +175,13 @@ class AppriseNotifications
     private function deliver(string $event, string $title, string $body, ?string $subject): NotificationDelivery
     {
         if (! $this->isConfigured()) {
-            return $this->record($event, $title, $subject, NotificationDelivery::STATUS_FAILED, 'Apprise is not configured.');
+            return $this->record(
+                $event,
+                $title,
+                $subject,
+                NotificationDelivery::STATUS_FAILED,
+                __('notifications.apprise.not_configured'),
+            );
         }
 
         // Best-effort delivery with tight transport deadlines. Notification
@@ -183,7 +204,10 @@ class AppriseNotifications
                 $title,
                 $subject,
                 NotificationDelivery::STATUS_FAILED,
-                'Apprise returned HTTP '.$response->status().'. '.self::redact((string) $response->body()),
+                __('notifications.apprise.http_error', [
+                    'status' => $response->status(),
+                    'error' => self::redact((string) $response->body()),
+                ]),
             );
         } catch (ConnectionException $e) {
             Log::warning('Apprise notification delivery failed.', ['event' => $event, 'error' => self::redact($e->getMessage())]);
@@ -299,6 +323,112 @@ class AppriseNotifications
 
         return in_array((int) $device->id, $devices, true)
             || ($device->device_group_id !== null && in_array((int) $device->device_group_id, $groups, true));
+    }
+
+    /** @return array{string, string} */
+    private function localizeEvent(string $event, string $title, string $body, ?Device $device): array
+    {
+        $deviceLabel = $this->deviceLabel($device) ?? $this->deviceLabelFromBody($event, $body);
+
+        return match ($event) {
+            'device.pending_approval' => [
+                __('notifications.apprise.device_pending_approval.title'),
+                $deviceLabel === null ? $body : __('notifications.apprise.device_pending_approval.body', ['device' => $deviceLabel]),
+            ],
+            'device.offline' => [
+                __('notifications.apprise.device_offline.title'),
+                $deviceLabel === null ? $body : __('notifications.apprise.device_offline.body', ['device' => $deviceLabel]),
+            ],
+            'device.online' => [
+                __('notifications.apprise.device_online.title'),
+                $deviceLabel === null ? $body : __('notifications.apprise.device_online.body', ['device' => $deviceLabel]),
+            ],
+            'console.login_failed' => [
+                __('notifications.apprise.console_login_failed.title'),
+                str_contains($body, 'RustDesk')
+                    ? __('notifications.apprise.console_login_failed.client_body')
+                    : __('notifications.apprise.console_login_failed.web_body'),
+            ],
+            'security.alarm' => [
+                $this->localizedAlarmTitle($title),
+                $deviceLabel === null ? $body : __('notifications.apprise.security_alarm.body', ['device' => $deviceLabel]),
+            ],
+            'remote_connection.failure' => [
+                __('notifications.apprise.remote_connection_failure.title'),
+                $deviceLabel === null ? $body : __('notifications.apprise.remote_connection_failure.body', ['device' => $deviceLabel]),
+            ],
+            default => [$title, $body],
+        };
+    }
+
+    private function localizedAlarmTitle(string $title): string
+    {
+        $keys = [
+            0 => 'ip_whitelist_block',
+            1 => 'many_failed_attempts',
+            2 => 'rapid_access_attempts',
+            6 => 'ipv6_prefix_attempts_exceeded',
+            7 => 'terminal_login_backoff',
+            8 => 'terminal_login_concurrency',
+            9 => 'session_scope_violation',
+            AlarmLog::TYP_BRUTE_FORCE => 'console_brute_force',
+            AlarmLog::TYP_SPRAYING => 'console_password_spraying',
+        ];
+
+        foreach (AlarmLog::TYPES as $type => $metadata) {
+            if ($metadata['label'] === $title && isset($keys[$type])) {
+                return __('notifications.apprise.security_alarm.types.'.$keys[$type]);
+            }
+        }
+
+        return $title;
+    }
+
+    private function deviceLabel(?Device $device): ?string
+    {
+        if ($device === null) {
+            return null;
+        }
+
+        $name = trim((string) ($device->alias ?: $device->hostname));
+
+        return $name === ''
+            ? __('notifications.command.device_label', ['id' => $device->rustdesk_id])
+            : $name.' ('.$device->rustdesk_id.')';
+    }
+
+    private function deviceLabelFromBody(string $event, string $body): ?string
+    {
+        $patterns = [
+            'device.pending_approval' => '/\A(.+) is awaiting approval\.\z/us',
+            'device.offline' => '/\A(.+) stopped\x20heartbeating\.\z/us',
+            'device.online' => '/\A(.+) is online again\.\z/us',
+            'security.alarm' => '/\ADevice (.+) reported a security alarm\.\z/us',
+            'remote_connection.failure' => '/\ADevice (.+) reported more than 30 failed connection attempts\.\z/us',
+        ];
+
+        if (! isset($patterns[$event]) || preg_match($patterns[$event], $body, $matches) !== 1) {
+            return null;
+        }
+
+        return $matches[1];
+    }
+
+    private function notificationLocale(): string
+    {
+        return app(LocaleNormalizer::class)->fallback();
+    }
+
+    private function withNotificationLocale(callable $callback, ?string $locale = null): mixed
+    {
+        $previous = app()->getLocale();
+        app()->setLocale($locale ?? $this->notificationLocale());
+
+        try {
+            return $callback();
+        } finally {
+            app()->setLocale($previous);
+        }
     }
 
     private function validEndpoint(string $endpoint): bool

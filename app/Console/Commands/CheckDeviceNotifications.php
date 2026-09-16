@@ -8,6 +8,7 @@ use App\Models\DevicePresenceSnooze;
 use App\Models\NotificationDelivery;
 use App\Models\Setting;
 use App\Services\AppriseNotifications;
+use App\Support\LocaleNormalizer;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
@@ -16,14 +17,40 @@ class CheckDeviceNotifications extends Command
 {
     protected $signature = 'cortendesk:check-device-notifications';
 
-    protected $description = 'Detect device offline/recovery transitions for Apprise notifications';
+    protected $description = '';
+
+    public function __construct()
+    {
+        $previous = app()->getLocale();
+        app()->setLocale(app(LocaleNormalizer::class)->fallback());
+
+        try {
+            $this->description = __('notifications.command.description');
+        } finally {
+            app()->setLocale($previous);
+        }
+
+        parent::__construct();
+    }
 
     public function handle(AppriseNotifications $notifications): int
+    {
+        $previous = app()->getLocale();
+        app()->setLocale(app(LocaleNormalizer::class)->fallback());
+
+        try {
+            return $this->sweep($notifications);
+        } finally {
+            app()->setLocale($previous);
+        }
+    }
+
+    private function sweep(AppriseNotifications $notifications): int
     {
         DevicePresenceSnooze::pruneForSweep();
 
         if (! $notifications->isEnabledFor('device.offline') && ! $notifications->isEnabledFor('device.online')) {
-            $this->info('Device presence notifications are disabled.');
+            $this->info(__('notifications.command.disabled'));
 
             return self::SUCCESS;
         }
@@ -49,8 +76,8 @@ class CheckDeviceNotifications extends Command
                     if (! $snoozed) {
                         $notifications->send(
                             'device.online',
-                            'Device recovered',
-                            self::deviceLabel($device).' is online again.',
+                            __('notifications.apprise.device_online.title'),
+                            __('notifications.apprise.device_online.body', ['device' => self::deviceLabel($device)]),
                             'device:'.$device->rustdesk_id,
                             $device,
                         );
@@ -88,8 +115,8 @@ class CheckDeviceNotifications extends Command
 
             $delivery = $notifications->send(
                 'device.offline',
-                'Device offline',
-                self::deviceLabel($device).' stopped heartbeating.',
+                __('notifications.apprise.device_offline.title'),
+                __('notifications.apprise.device_offline.body', ['device' => self::deviceLabel($device)]),
                 'device:'.$device->rustdesk_id,
                 $device,
             );
@@ -102,7 +129,10 @@ class CheckDeviceNotifications extends Command
             }
         });
 
-        $this->info("Detected {$offline} offline and {$recovered} recovered device transition(s).");
+        $this->info(__('notifications.command.summary', [
+            'offline' => trans_choice('notifications.command.offline_count', $offline, ['count' => $offline]),
+            'recovered' => trans_choice('notifications.command.recovered_count', $recovered, ['count' => $recovered]),
+        ]));
 
         return self::SUCCESS;
     }
@@ -119,8 +149,8 @@ class CheckDeviceNotifications extends Command
         if (! DevicePresenceSnooze::isActiveFor($device)) {
             $notifications->sendAfterResponse(
                 'device.online',
-                'Device recovered',
-                self::deviceLabel($device).' is online again.',
+                __('notifications.apprise.device_online.title'),
+                __('notifications.apprise.device_online.body', ['device' => self::deviceLabel($device)]),
                 'device:'.$device->rustdesk_id,
                 $device,
             );
@@ -131,7 +161,9 @@ class CheckDeviceNotifications extends Command
     {
         $name = trim((string) ($device->alias ?: $device->hostname));
 
-        return $name === '' ? 'Device '.$device->rustdesk_id : $name.' ('.$device->rustdesk_id.')';
+        return $name === ''
+            ? __('notifications.command.device_label', ['id' => $device->rustdesk_id])
+            : $name.' ('.$device->rustdesk_id.')';
     }
 
     /** Consume a durable marker or the shared legacy claim exactly once. */

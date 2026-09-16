@@ -2,6 +2,8 @@
 
 namespace App\Mail;
 
+use App\Models\User;
+use App\Support\LocaleNormalizer;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -13,20 +15,30 @@ use Illuminate\Mail\Mailables\Envelope;
  */
 class LoginVerificationCode extends Mailable
 {
+    public string $username;
+
     public function __construct(
         public string $code,
-        public string $username,
+        User $user,
         public ?string $ip = null,
         public int $minutes = 10,
-    ) {}
+    ) {
+        $this->username = $user->username;
+        $normalizer = app(LocaleNormalizer::class);
+        $this->locale($user->preferredLocale()
+            ?? $normalizer->fallback());
+    }
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: $this->code.' is your '.config('app.name').' sign-in code');
+        return new Envelope(subject: __('notifications.mail.login.subject', [
+            'code' => $this->code,
+            'app' => config('app.name'),
+        ]));
     }
 
     public function content(): Content
     {
-        return new Content(view: 'mail.login-code');
+        return new Content(view: 'mail.login-code', text: 'mail.login-code-text');
     }
 }

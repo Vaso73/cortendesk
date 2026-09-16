@@ -6,7 +6,6 @@ use App\Mail\TestMessage;
 use App\Models\Setting;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -175,28 +174,28 @@ class MailSettings
      *
      * @return array{ok: bool, message: string}
      */
-    public function test(string $to): array
+    public function test(string $to, ?string $locale = null): array
     {
         if (! $this->isConfigured()) {
-            return ['ok' => false, 'message' => 'Set the SMTP host and From address first.'];
+            return ['ok' => false, 'message' => __('settings.mail.configure_first')];
         }
 
         try {
             // Deliberately bypasses the enabled switch: the test button exists
             // so an operator can prove the relay works BEFORE turning email on.
             $this->writeConfig();
-            Mail::to($to)->send(new TestMessage);
+            Mail::to($to)->send(new TestMessage($locale));
         } catch (\Throwable $e) {
             $this->recordFailure($e->getMessage());
 
-            return ['ok' => false, 'message' => 'Send failed: '.$e->getMessage()];
+            return ['ok' => false, 'message' => __('settings.mail.send_failed_detail', ['error' => $e->getMessage()])];
         }
 
         // A successful test is the intended way to clear a relay outage: it is
         // what releases the administrator from RequireMailHealthy.
         $this->recordSuccess();
 
-        return ['ok' => true, 'message' => 'Test message sent to '.$to.'. Check the inbox (and the spam folder).'];
+        return ['ok' => true, 'message' => __('settings.mail.test_sent', ['address' => $to])];
     }
 
     /** Decrypt the stored SMTP password, tolerating a plaintext legacy value. */

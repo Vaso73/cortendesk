@@ -83,10 +83,10 @@ class InvitationManager extends Component
             'user_group_ids.*' => [Rule::exists('user_groups', 'id')],
             'device_group_ids' => ['array'],
             'device_group_ids.*' => [Rule::exists('device_groups', 'id')],
-        ], [
-            'email.unique' => 'That address already has an account or a pending invitation.',
-            'username.unique' => 'That username is already taken or reserved by a pending invitation.',
-        ]);
+        ], array_merge(__('identity.validation.messages'), [
+            'email.unique' => __('identity.invitations.validation_email_unique'),
+            'username.unique' => __('identity.invitations.validation_username_unique'),
+        ]), __('identity.validation.attributes'));
 
         // Same escalation guards as UserList::save (PLAN D4): a delegated
         // user-manager may not invite an administrator, and may not pre-grant a
@@ -108,7 +108,11 @@ class InvitationManager extends Component
 
         ConsoleAudit::record(
             'user.invite',
-            'Invited '.$invitation->email.' as '.$invitation->username.($invitation->is_admin ? ' (administrator)' : ''),
+            __('identity.invitations.audit_invited', [
+                'email' => $invitation->email,
+                'username' => $invitation->username,
+                'administrator' => $invitation->is_admin ? __('identity.invitations.audit_administrator_suffix', [], 'en') : '',
+            ], 'en'),
             'invitation',
             (string) $invitation->id,
         );
@@ -141,7 +145,7 @@ class InvitationManager extends Component
 
         ConsoleAudit::record(
             'user.invite-resend',
-            'Re-sent the invitation for '.$invitation->email,
+            __('identity.invitations.audit_resent', ['email' => $invitation->email], 'en'),
             'invitation',
             (string) $invitation->id,
         );
@@ -167,7 +171,12 @@ class InvitationManager extends Component
             $this->inviteFor = '';
         }
 
-        ConsoleAudit::record('user.invite-revoke', 'Revoked the invitation for '.$email, 'invitation', (string) $id);
+        ConsoleAudit::record(
+            'user.invite-revoke',
+            __('identity.invitations.audit_revoked', ['email' => $email], 'en'),
+            'invitation',
+            (string) $id,
+        );
     }
 
     public function dismissLink(): void
@@ -231,7 +240,11 @@ class InvitationManager extends Component
         $url = route('invite.show', $plain);
 
         $this->mailSent = app(MailSettings::class)->send(
-            new UserInvitation($invitation, $url, auth()->user()?->displayName() ?? 'An administrator'),
+            new UserInvitation(
+                $invitation,
+                $url,
+                auth()->user()?->displayName() ?? __('identity.invitations.mailer_sender_fallback'),
+            ),
             $invitation->email,
         );
 
