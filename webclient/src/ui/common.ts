@@ -1,6 +1,8 @@
 // Shared UI helpers for the desktop client (app.ts) and the file-transfer
 // window (file-app.ts): icons, state labels, saved-credential storage, session
 // config plumbing. app.ts re-exports everything here for back-compat.
+import { t } from '../i18n';
+import type { I18nBootstrap } from '../i18n';
 import type { DisplayInfo, SessionConfig, SessionState, UiCommand } from '../core/contracts';
 import type { DisplayRect } from '../input/mouse-keyboard';
 
@@ -14,6 +16,7 @@ export type RdGlobalConfig = {
   /** Console version, injected per request — see OVERLAY_VERSION. */
   version?: string;
   workerUrl?: string;
+  i18n: I18nBootstrap;
 };
 
 export const QUALITY = { best: 4, balanced: 3, speed: 2 } as const; // ImageQuality enum values
@@ -35,17 +38,7 @@ export function overlayVersion(cfg?: { version?: string } | null): string {
   return v ? `v${v}` : OVERLAY_VERSION;
 }
 
-export const STATE_LABEL: Record<SessionState, string> = {
-  connecting: 'Connecting',
-  rendezvous: 'Contacting server',
-  relay: 'Opening relay',
-  handshake: 'Securing channel',
-  login: 'Authenticating',
-  streaming: 'Connected',
-  error: 'Error',
-  closed: 'Disconnected',
-  needAccept: 'Waiting for remote user to accept',
-};
+export function stateLabel(state: SessionState): string { return t(`state.${state}`); }
 
 export function formatDuration(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -149,6 +142,7 @@ export function buildSessionConfig(
     myId: g.myId,
     myName: g.myName,
     savedHashHex,
+    i18n: g.i18n,
     ...(connType ? { connType } : {}),
   };
 }

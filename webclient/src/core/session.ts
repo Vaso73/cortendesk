@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import type { DisplayInfo, Encryptor, SessionConfig, SessionEvent, SessionState } from './contracts';
 import {
   ChatMessage,
@@ -420,7 +421,7 @@ export class Session {
         if (!u.voice_call_request.is_connect && hadCall) {
           this.pendingVoiceCallTimestamp = null;
           this.voiceCallAccepted = false;
-          this.sinks.emit({ t: 'voiceCall', state: 'closed', detail: 'Remote user ended the call' });
+          this.sinks.emit({ t: 'voiceCall', state: 'closed', detail: t('session.remoteEndedCall') });
         }
         return;
       }
@@ -434,7 +435,7 @@ export class Session {
           this.sinks.emit({
             t: 'voiceCall',
             state: 'closed',
-            detail: 'Voice call response could not be verified',
+            detail: t('session.callVerifyFailed'),
           });
           return;
         }

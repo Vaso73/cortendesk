@@ -1,11 +1,12 @@
+import { t } from '../i18n';
 import type { SessionState } from '../core/contracts';
 
 export type VoiceCallUiState = 'idle' | 'preparing' | 'waiting' | 'connected';
 
 export type VoiceCallUiModel = {
   disabled: boolean;
-  label: 'Voice call' | 'End call';
-  ariaLabel: 'Start voice call' | 'End voice call';
+  label: string;
+  ariaLabel: string;
   status: string;
 };
 
@@ -23,34 +24,34 @@ export function voiceCallUiModel(
   if (!browserSupported && !active) {
     return {
       disabled: true,
-      label: 'Voice call',
-      ariaLabel: 'Start voice call',
-      status: 'Voice calls need Chrome or Edge over HTTPS',
+      label: t('chat.voiceCall'),
+      ariaLabel: t('chat.startCallAria'),
+      status: t('chat.needSecure'),
     };
   }
   if (callState === 'preparing') {
     return {
       disabled: true,
-      label: 'Voice call',
-      ariaLabel: 'Start voice call',
-      status: 'Requesting microphone…',
+      label: t('chat.voiceCall'),
+      ariaLabel: t('chat.startCallAria'),
+      status: t('chat.requestMic'),
     };
   }
   const unavailable = sessionState !== 'streaming' || !audioAllowed;
   const status = callState === 'waiting'
-    ? 'Waiting for the remote user…'
+    ? t('chat.waiting')
     : callState === 'connected'
-      ? 'Voice call connected'
+      ? t('chat.connected')
       : !audioAllowed
-        ? 'Voice calls are not permitted by this device'
+        ? t('chat.notPermitted')
         : sessionState !== 'streaming'
-          ? 'Voice calls require a connected session'
-          : 'Voice calls are off';
+          ? t('chat.requireSession')
+          : t('chat.off');
 
   return {
     disabled: unavailable && !active,
-    label: active ? 'End call' : 'Voice call',
-    ariaLabel: active ? 'End voice call' : 'Start voice call',
+    label: active ? t('chat.endCall') : t('chat.voiceCall'),
+    ariaLabel: active ? t('chat.endCallAria') : t('chat.startCallAria'),
     status,
   };
 }

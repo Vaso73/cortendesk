@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+import { escapeHtml } from './common';
 import type { SessionConfig, SessionEvent, UiCommand } from '../core/contracts';
 import { disconnectIndependentWorker } from './advanced-worker-lifecycle';
 
@@ -5,6 +7,8 @@ const MAX_TERMINAL_TEXT = 1_000_000;
 const utf8 = new TextEncoder();
 
 type TerminalParserState = 'text'|'escape'|'csi'|'osc'|'oscEscape'|'controlString'|'controlEscape';
+
+function h(key: string, params?: Record<string, string | number>): string { return escapeHtml(t(key, params)); }
 
 export class TerminalControlStripper {
   private state: TerminalParserState = 'text';
@@ -130,22 +134,22 @@ export class TerminalPanel {
     shell.className = 'rd-terminal-modal';
     shell.setAttribute('role', 'dialog');
     shell.setAttribute('aria-modal', 'true');
-    shell.setAttribute('aria-label', 'Remote terminal');
+    shell.setAttribute('aria-label', t('terminal.title'));
     shell.innerHTML = `
       <div class="rd-terminal-card">
         <header class="rd-terminal-head">
-          <div><strong>Remote terminal</strong><span data-terminal-status>Not connected</span></div>
-          <button type="button" data-terminal-close aria-label="Close remote terminal">×</button>
+          <div><strong>${h('terminal.title')}</strong><span data-terminal-status>${h('common.notConnected')}</span></div>
+          <button type="button" data-terminal-close aria-label="${h('terminal.closeAria')}">×</button>
         </header>
         <div class="rd-terminal-consent">
-          <label><input type="checkbox" data-terminal-persistent> Keep the terminal available after disconnect</label>
-          <button type="button" data-terminal-connect>Connect terminal</button>
+          <label><input type="checkbox" data-terminal-persistent> ${h('terminal.keep')}</label>
+          <button type="button" data-terminal-connect>${h('terminal.connect')}</button>
         </div>
-        <pre class="rd-terminal-output" tabindex="0" aria-live="polite" aria-label="Remote terminal output"></pre>
+        <pre class="rd-terminal-output" tabindex="0" aria-live="polite" aria-label="${h('terminal.outputAria')}"></pre>
         <form class="rd-terminal-input-row">
-          <label for="rd-terminal-input">Command input</label>
+          <label for="rd-terminal-input">${h('terminal.commandInput')}</label>
           <input id="rd-terminal-input" type="text" autocomplete="off" spellcheck="false" disabled>
-          <button type="submit" disabled>Send</button>
+          <button type="submit" disabled>${h('terminal.send')}</button>
         </form>
       </div>`;
     this.deps.root.appendChild(shell);
@@ -173,7 +177,7 @@ export class TerminalPanel {
     if (this.worker) return;
     const config = this.deps.getConfig();
     if (!config) {
-      this.deps.toast('Connect to the device before opening a terminal');
+      this.deps.toast(t('terminal.connectFirst'));
       return;
     }
     this.serviceStorageKey = `rd:terminal-service:${config.peerId}`;
@@ -188,13 +192,13 @@ export class TerminalPanel {
       terminalPersistent: persistent,
       terminalServiceId: serviceId,
     };
-    this.setStatus('Connecting…');
+    this.setStatus(t('camera.statusConnecting'));
     this.decoder = new TextDecoder();
     this.byteNormalizer.reset();
     this.controlStripper.reset();
     this.worker = new Worker(this.deps.workerUrl, { type: 'module' });
     this.worker.onmessage = (event: MessageEvent<SessionEvent>) => this.onEvent(event.data);
-    this.worker.onerror = () => this.fail('Terminal worker failed');
+    this.worker.onerror = () => this.fail(t('terminal.workerFailed'));
     this.worker.postMessage({ c: 'connectTerminal', config: terminalConfig } satisfies UiCommand);
   }
 
@@ -202,12 +206,12 @@ export class TerminalPanel {
     switch (event.t) {
       case 'state':
         if (event.state === 'streaming') {
-          this.setStatus('Opening terminal…');
+          this.setStatus(t('terminal.opening'));
           this.worker?.postMessage({
             c: 'terminalOpen', terminalId: 0, rows: this.lastRows, cols: this.lastCols,
           } satisfies UiCommand);
         } else if (event.state === 'error' || event.state === 'closed') {
-          this.fail(event.detail || (event.state === 'closed' ? 'Terminal disconnected' : 'Terminal connection failed'));
+          this.fail(event.detail || (event.state === 'closed' ? t('terminal.disconnected') : t('terminal.connectionFailed')));
         } else {
           this.setStatus(event.detail || event.state);
         }
@@ -217,18 +221,18 @@ export class TerminalPanel {
         break;
       case 'terminalOpened':
         if (!event.success) {
-          this.fail(event.message || 'The remote terminal could not be opened');
+          this.fail(event.message || t('terminal.openFailed'));
           break;
         }
         this.terminalId = event.terminalId;
         this.opened = true;
         this.setInputEnabled(true);
-        this.setStatus(event.replayTerminalOutput ? 'Connected · replaying buffered output' : 'Connected');
+        this.setStatus(event.replayTerminalOutput ? t('terminal.connectedReplay') : t('state.streaming'));
         if (event.serviceId && this.persistent?.checked) {
           try { localStorage.setItem(this.serviceStorageKey, event.serviceId); } catch { /* non-fatal */ }
         }
         if (event.persistentSessions.length) {
-          this.appendText(`\n[${event.persistentSessions.length} additional persistent session${event.persistentSessions.length === 1 ? '' : 's'} available]\n`);
+          this.appendText(`\n${t('terminal.additionalSessions', { count: event.persistentSessions.length })}\n`);
         }
         this.input?.focus();
         break;
@@ -240,7 +244,7 @@ export class TerminalPanel {
       case 'terminalClosed':
         this.opened = false;
         this.setInputEnabled(false);
-        this.setStatus(`Terminal exited with code ${event.exitCode}`);
+        this.setStatus(t('terminal.exitCode', { code: event.exitCode }));
         break;
       case 'terminalError':
         this.fail(event.message);

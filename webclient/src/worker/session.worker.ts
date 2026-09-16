@@ -24,6 +24,8 @@ import {
   type FileResponse,
   type VideoFrame,
 } from '../gen/message';
+import { t } from '../i18n';
+import { initializeWorkerI18n } from './worker-i18n';
 import { sodiumReady } from '../core/crypto';
 import { Session, type SessionSinks } from '../core/session';
 import { fileResponseToEvents } from '../core/file-transfer';
@@ -405,8 +407,9 @@ export class WorkerHost {
   // canvas === undefined -> non-video connection (file transfer or terminal):
   // no video/audio pipelines and no codec probe.
   private async connect(config: SessionConfig, canvas: OffscreenCanvas | undefined): Promise<void> {
+    initializeWorkerI18n(config);
     if (this.connectStarted) {
-      this.deps.post({ t: 'state', state: 'error', detail: 'worker already connected' });
+      this.deps.post({ t: 'state', state: 'error', detail: t('worker.alreadyConnected') });
       return;
     }
     this.connectStarted = true;
@@ -487,7 +490,7 @@ export class WorkerHost {
               this.deps.post({
                 t: 'terminalError',
                 terminalId: ev.terminalId,
-                message: `Could not decompress terminal output: ${errMsg(error)}`,
+                message: t('worker.terminalDecompress', { error: errMsg(error) }),
               });
               return;
             }
@@ -541,7 +544,7 @@ export class WorkerHost {
             this.deps.post({
               t: 'state',
               state: 'error',
-              detail: `Timed out while ${CONNECT_STAGE[st] ?? 'connecting'} — the device may be offline or busy. Try again.`,
+              detail: t('worker.timeout', { stage: t(`worker.stage.${st}`) }),
             });
             this.teardown();
           }
@@ -569,7 +572,7 @@ export class WorkerHost {
       ws2.onClose(() => this.onSocketClosed('relay'));
       this.session?.relayOpened();
     } catch (e) {
-      this.deps.post({ t: 'state', state: 'error', detail: `relay connect failed: ${errMsg(e)}` });
+      this.deps.post({ t: 'state', state: 'error', detail: t('worker.relayFailed', { error: errMsg(e) }) });
       this.teardown();
     }
   }
@@ -707,7 +710,7 @@ export class WorkerHost {
     if (this.tornDown) return;
     const st = this.session?.currentState;
     if (st === 'connecting' || st === 'rendezvous') {
-      this.deps.post({ t: 'state', state: 'error', detail: 'id server connection lost' });
+      this.deps.post({ t: 'state', state: 'error', detail: t('worker.idLost') });
       this.teardown();
     }
     // else: relay is live; drop the id socket silently, keep the session.
@@ -718,7 +721,7 @@ export class WorkerHost {
     if (this.tornDown) return;
     const st = this.session?.currentState;
     if (st !== 'closed' && st !== 'error') {
-      this.deps.post({ t: 'state', state: 'error', detail: `${which} connection lost` });
+      this.deps.post({ t: 'state', state: 'error', detail: t('worker.connectionLost', { connection: which }) });
     }
     this.teardown();
   }

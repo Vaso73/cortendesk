@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+import { escapeHtml } from './common';
 import type { DisplayInfo, SessionConfig, SessionEvent, UiCommand } from '../core/contracts';
 import { disconnectIndependentWorker } from './advanced-worker-lifecycle';
 import { MseVideoPlayer } from '../media/mse-video';
@@ -14,6 +16,8 @@ type CameraPanelDeps = {
 };
 
 type CameraWorkerEvent = SessionEvent | { t: 'h264'; data: Uint8Array; key: boolean };
+
+function h(key: string, params?: Record<string, string | number>): string { return escapeHtml(t(key, params)); }
 
 export class CameraPanel {
   private shell: HTMLElement | undefined;
@@ -32,7 +36,7 @@ export class CameraPanel {
     if (this.shell) return;
     const config = this.deps.getConfig();
     if (!config) {
-      this.deps.toast('Connect to the device before viewing its camera');
+      this.deps.toast(t('camera.connectFirst'));
       return;
     }
 
@@ -40,17 +44,17 @@ export class CameraPanel {
     shell.className = 'rd-camera-modal';
     shell.setAttribute('role', 'dialog');
     shell.setAttribute('aria-modal', 'true');
-    shell.setAttribute('aria-label', 'Remote camera');
+    shell.setAttribute('aria-label', t('camera.title'));
     shell.innerHTML = `
       <div class="rd-camera-card">
         <header class="rd-camera-head">
-          <div><strong>Remote camera</strong><span data-camera-status>Connecting…</span></div>
-          <div data-camera-selector aria-label="Camera source"></div>
-          <button type="button" data-camera-close aria-label="Close remote camera">×</button>
+          <div><strong>${h('camera.title')}</strong><span data-camera-status>${h('camera.statusConnecting')}</span></div>
+          <div data-camera-selector aria-label="${h('camera.source')}"></div>
+          <button type="button" data-camera-close aria-label="${h('camera.closeAria')}">×</button>
         </header>
         <div class="rd-camera-viewport">
-          <canvas aria-label="Remote camera video"></canvas>
-          <video autoplay playsinline muted hidden aria-label="Remote camera fallback video"></video>
+          <canvas aria-label="${h('camera.videoAria')}"></canvas>
+          <video autoplay playsinline muted hidden aria-label="${h('camera.fallbackAria')}"></video>
         </div>
       </div>`;
     this.deps.root.appendChild(shell);
@@ -64,7 +68,7 @@ export class CameraPanel {
     const offscreen = this.canvas.transferControlToOffscreen();
     this.worker = new Worker(this.deps.workerUrl, { type: 'module' });
     this.worker.onmessage = (event: MessageEvent<CameraWorkerEvent>) => this.onEvent(event.data);
-    this.worker.onerror = () => this.fail('Camera worker failed');
+    this.worker.onerror = () => this.fail(t('camera.workerFailed'));
     this.worker.postMessage(
       { c: 'connect', config: buildCameraConfig(config), canvas: offscreen } satisfies UiCommand,
       [offscreen],
@@ -76,9 +80,9 @@ export class CameraPanel {
       case 'state':
         this.connected = event.state === 'streaming';
         if (event.state === 'error' || event.state === 'closed') {
-          this.fail(event.detail || (event.state === 'closed' ? 'Camera disconnected' : 'Camera connection failed'));
+          this.fail(event.detail || (event.state === 'closed' ? t('camera.disconnected') : t('camera.connectFailed')));
         } else {
-          this.setStatus(event.detail || (this.connected ? 'Live' : event.state));
+          this.setStatus(event.detail || (this.connected ? t('camera.live') : event.state));
         }
         break;
       case 'loginError':
@@ -113,7 +117,7 @@ export class CameraPanel {
     displays.forEach((display, index) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.textContent = display.name?.trim() || `Camera ${index + 1}`;
+      button.textContent = display.name?.trim() || t('camera.number', { count: index + 1 });
       button.dataset.cameraIndex = String(index);
       button.classList.toggle('rd-active', index === current);
       button.addEventListener('click', () => {

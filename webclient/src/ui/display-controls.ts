@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import type { DisplayInfo } from '../core/contracts';
 import { SupportedDecoding_PreferCodec } from '../gen/message';
 
@@ -159,7 +160,7 @@ export function buildResolutionChoices(input: {
     .sort((a, b) => a.width * a.height - b.width * b.height)
     .map((value) => ({
       ...value,
-      label: `${value.width}×${value.height}${input.original?.width === value.width && input.original.height === value.height ? ' (original)' : ''}`,
+      label: `${value.width}×${value.height}${input.original?.width === value.width && input.original.height === value.height ? ` ${t('resolution.original')}` : ''}`,
     }));
 }
 
