@@ -6,21 +6,21 @@
             <div class="rd-toolbar-search">
                 <div class="input-group">
                     <span class="input-group-text"><i class="ri-search-line"></i></span>
-                    <input type="search" class="form-control" placeholder="Search device ID, from, path, IP…"
+                    <input type="search" class="form-control" placeholder="{{ __('audit.search.file_transfers') }}"
                            wire:model.live.debounce.300ms="search">
                 </div>
             </div>
-            <input type="date" class="form-control rd-toolbar-filter" wire:model.live="dateFrom" aria-label="From date">
-            <input type="date" class="form-control rd-toolbar-filter" wire:model.live="dateTo" aria-label="To date">
-            <select class="form-select rd-toolbar-narrow" wire:model.live="perPage" aria-label="Rows per page">
+            <input type="date" class="form-control rd-toolbar-filter" wire:model.live="dateFrom" aria-label="{{ __('audit.filters.from_date') }}">
+            <input type="date" class="form-control rd-toolbar-filter" wire:model.live="dateTo" aria-label="{{ __('audit.filters.to_date') }}">
+            <select class="form-select rd-toolbar-narrow" wire:model.live="perPage" aria-label="{{ __('audit.filters.rows_per_page') }}">
                 <option value="20">20</option>
                 <option value="50">50</option>
                 <option value="100">100</option>
             </select>
             <div class="rd-toolbar-actions">
-                <button type="button" class="btn btn-outline-light" wire:click="resetFilters">Reset</button>
+                <button type="button" class="btn btn-outline-light" wire:click="resetFilters">{{ __('audit.filters.reset') }}</button>
                 <button type="button" class="btn btn-primary" wire:click="export">
-                    <i class="ri-download-2-line"></i>Export CSV
+                    <i class="ri-download-2-line"></i>{{ __('audit.filters.export_csv') }}
                 </button>
             </div>
         </div>
@@ -30,13 +30,13 @@
             <table class="table table-hover table-centered mb-0">
                 <thead>
                 <tr>
-                    <th>When</th>
-                    <th>Device</th>
-                    <th>From</th>
-                    <th>Direction</th>
-                    <th>Path</th>
-                    <th>Files</th>
-                    <th>IP</th>
+                    <th>{{ __('audit.columns.when') }}</th>
+                    <th>{{ __('audit.columns.device') }}</th>
+                    <th>{{ __('audit.columns.from') }}</th>
+                    <th>{{ __('audit.columns.direction') }}</th>
+                    <th>{{ __('audit.columns.path') }}</th>
+                    <th>{{ __('audit.columns.files') }}</th>
+                    <th>{{ __('audit.columns.ip') }}</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -52,9 +52,9 @@
                         </td>
                         <td>
                             @if ($transfer->direction === 1)
-                                <span class="badge bg-warning-subtle text-warning"><i class="ri-arrow-down-line me-1"></i>Receive</span>
+                                <span class="badge bg-warning-subtle text-warning"><i class="ri-arrow-down-line me-1"></i>{{ __('audit.status.receive') }}</span>
                             @else
-                                <span class="badge bg-info-subtle text-info"><i class="ri-arrow-up-line me-1"></i>Send</span>
+                                <span class="badge bg-info-subtle text-info"><i class="ri-arrow-up-line me-1"></i>{{ __('audit.status.send') }}</span>
                             @endif
                         </td>
                         <td>
@@ -69,9 +69,9 @@
                         <td colspan="7" class="rd-empty-cell">
                             <div class="rd-empty">
                                 <div class="rd-empty-icon"><i class="ri-file-transfer-line"></i></div>
-                                <p class="rd-empty-title">No file transfers match your filters.</p>
-                                <p class="rd-empty-text">Files moved during a remote session are recorded here.</p>
-                                <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetFilters">Clear filters</button>
+                                <p class="rd-empty-title">{{ __('audit.empty.file_transfers.title') }}</p>
+                                <p class="rd-empty-text">{{ __('audit.empty.file_transfers.text') }}</p>
+                                <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetFilters">{{ __('audit.filters.clear') }}</button>
                             </div>
                         </td>
                     </tr>
@@ -88,13 +88,13 @@
                         <div class="min-width-0">
                             <span class="rd-mini-title">{{ $transfer->rustdesk_id }}</span>
                             <span class="rd-mini-sub">
-                                from {{ $transfer->from_peer ?: '—' }}@if ($transfer->from_name) ({{ $transfer->from_name }})@endif
+                                {{ __('audit.mobile.from', ['peer' => $transfer->from_peer ?: '—']) }}@if ($transfer->from_name) ({{ $transfer->from_name }})@endif
                             </span>
                         </div>
                         @if ($transfer->direction === 1)
-                            <span class="badge bg-warning-subtle text-warning"><i class="ri-arrow-down-line me-1"></i>Receive</span>
+                            <span class="badge bg-warning-subtle text-warning"><i class="ri-arrow-down-line me-1"></i>{{ __('audit.status.receive') }}</span>
                         @else
-                            <span class="badge bg-info-subtle text-info"><i class="ri-arrow-up-line me-1"></i>Send</span>
+                            <span class="badge bg-info-subtle text-info"><i class="ri-arrow-up-line me-1"></i>{{ __('audit.status.send') }}</span>
                         @endif
                     </div>
                     <div class="mt-2">
@@ -102,7 +102,7 @@
                             <i class="ri-file-line me-1"></i>{{ $transfer->path ?: '—' }}
                         </small>
                         <span class="rd-mini-sub">
-                            {{ $transfer->file_count }} {{ Str::plural('file', $transfer->file_count) }} ·
+                            {{ trans_choice('audit.file_count', $transfer->file_count, ['count' => $transfer->file_count]) }} ·
                             {{ $transfer->ip ?: '—' }} ·
                             {{ $transfer->created_at?->diffForHumans(short: true) }}
                         </span>
@@ -111,15 +111,15 @@
             @empty
                 <div class="rd-empty">
                     <div class="rd-empty-icon"><i class="ri-file-transfer-line"></i></div>
-                    <p class="rd-empty-title">No file transfers match your filters.</p>
-                    <p class="rd-empty-text">Files moved during a remote session are recorded here.</p>
-                    <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetFilters">Clear filters</button>
+                    <p class="rd-empty-title">{{ __('audit.empty.file_transfers.title') }}</p>
+                    <p class="rd-empty-text">{{ __('audit.empty.file_transfers.text') }}</p>
+                    <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetFilters">{{ __('audit.filters.clear') }}</button>
                 </div>
             @endforelse
         </div>
 
         <div class="rd-tablefoot">
-            <span>Showing {{ $transfers->firstItem() ?? 0 }}–{{ $transfers->lastItem() ?? 0 }} of {{ $transfers->total() }}</span>
+            <span>{{ __('audit.pagination.summary', ['from' => $transfers->firstItem() ?? 0, 'to' => $transfers->lastItem() ?? 0, 'total' => $transfers->total()]) }}</span>
             {{ $transfers->links() }}
         </div>
     </div>

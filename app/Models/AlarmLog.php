@@ -31,6 +31,18 @@ class AlarmLog extends Model
         101 => ['label' => 'Console password spraying', 'severity' => 'danger'],
     ];
 
+    private const TYPE_TRANSLATION_KEYS = [
+        0 => 'ip_whitelist_block',
+        1 => 'many_failed_attempts',
+        2 => 'rapid_access_attempts',
+        6 => 'ipv6_prefix_attempts_exceeded',
+        7 => 'terminal_login_backoff',
+        8 => 'terminal_login_concurrency',
+        9 => 'session_scope_violation',
+        100 => 'console_brute_force',
+        101 => 'console_password_spraying',
+    ];
+
     /** Repeated failed sign-ins against one console account. */
     public const TYP_BRUTE_FORCE = 100;
 
@@ -69,10 +81,14 @@ class AlarmLog extends Model
         ];
     }
 
-    /** Human label for this alarm's typ; "Type N" when unknown. */
+    /** Human label for this alarm's typ; localized "Type N" when unknown. */
     public function typeLabel(): string
     {
-        return self::TYPES[$this->typ]['label'] ?? 'Type '.$this->typ;
+        $key = self::TYPE_TRANSLATION_KEYS[$this->typ] ?? null;
+
+        return $key === null
+            ? __('audit.unknown_type', ['type' => $this->typ])
+            : __("audit.alarm_types.{$key}");
     }
 
     /** Bootstrap severity suffix (danger|warning|info|secondary) for the badge. */

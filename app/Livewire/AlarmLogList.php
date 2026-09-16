@@ -106,7 +106,7 @@ class AlarmLogList extends Component
                 fputcsv($out, [
                     $row->created_at?->toDateTimeString(),
                     $row->rustdesk_id,
-                    $row->typeLabel(),
+                    AlarmLog::TYPES[$row->typ]['label'] ?? 'Type '.$row->typ,
                     $row->info,
                     $row->conn_id,
                 ]);
@@ -119,7 +119,9 @@ class AlarmLogList extends Component
     {
         return view('livewire.alarm-log-list', [
             'alarms' => $this->query()->paginate($this->perPage),
-            'types' => AlarmLog::TYPES,
+            'types' => collect(array_keys(AlarmLog::TYPES))->mapWithKeys(fn (int $type) => [
+                $type => ['label' => (new AlarmLog(['typ' => $type]))->typeLabel()],
+            ])->all(),
         ]);
     }
 }

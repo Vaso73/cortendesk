@@ -232,7 +232,7 @@ class AddressBookManager extends Component
         $this->validate([
             'bookName' => 'required|string|max:255',
             'bookNote' => 'nullable|string|max:500',
-        ], [], ['bookName' => 'name', 'bookNote' => 'note']);
+        ], __('address_books.validation.messages'), ['bookName' => __('address_books.validation.name'), 'bookNote' => __('address_books.validation.note')]);
 
         $book = AddressBook::create([
             'name' => trim($this->bookName),
@@ -241,7 +241,7 @@ class AddressBookManager extends Component
             'is_personal' => false,
         ]);
 
-        ConsoleAudit::record('address-book.create', 'Created address book '.$book->name, 'address-book', $book->name);
+        ConsoleAudit::record('address-book.create', __('address_books.audit.created', ['name' => $book->name], 'en'), 'address-book', $book->name);
 
         $this->closeModal();
         $this->selectBook($book->id);
@@ -257,7 +257,7 @@ class AddressBookManager extends Component
         $this->validate([
             'bookName' => 'required|string|max:255',
             'bookNote' => 'nullable|string|max:500',
-        ], [], ['bookName' => 'name', 'bookNote' => 'note']);
+        ], __('address_books.validation.messages'), ['bookName' => __('address_books.validation.name'), 'bookNote' => __('address_books.validation.note')]);
 
         $book->update([
             'name' => trim($this->bookName),
@@ -286,7 +286,7 @@ class AddressBookManager extends Component
         $book->rules()->delete();
         $book->delete();
 
-        ConsoleAudit::record('address-book.delete', 'Deleted address book '.$bookName, 'address-book', $bookName);
+        ConsoleAudit::record('address-book.delete', __('address_books.audit.deleted', ['name' => $bookName], 'en'), 'address-book', $bookName);
 
         $this->selectedBookId = $this->defaultBookId();
         $this->resetPage();
@@ -309,7 +309,7 @@ class AddressBookManager extends Component
                 Rule::unique('tags', 'name')->where('address_book_id', $book->id),
             ],
             'tagColor' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-        ], [], ['tagName' => 'tag name', 'tagColor' => 'color']);
+        ], __('address_books.validation.messages'), ['tagName' => __('address_books.validation.tag_name'), 'tagColor' => __('address_books.validation.color')]);
 
         Tag::create([
             'address_book_id' => $book->id,
@@ -355,7 +355,7 @@ class AddressBookManager extends Component
 
         if ($this->entryId !== null) {
             $entry = $book->entries()->findOrFail($this->entryId);
-            $this->validate(['entryAlias' => 'nullable|string|max:255'], [], ['entryAlias' => 'alias']);
+            $this->validate(['entryAlias' => 'nullable|string|max:255'], __('address_books.validation.messages'), ['entryAlias' => __('address_books.validation.alias')]);
             $entry->update([
                 'alias' => $this->entryAlias !== '' ? trim($this->entryAlias) : null,
                 'tag_ids' => $tagIds,
@@ -367,7 +367,7 @@ class AddressBookManager extends Component
                     Rule::unique('address_book_entries', 'rustdesk_id')->where('address_book_id', $book->id),
                 ],
                 'entryAlias' => 'nullable|string|max:255',
-            ], [], ['entryRustdeskId' => 'RustDesk ID', 'entryAlias' => 'alias']);
+            ], __('address_books.validation.messages'), ['entryRustdeskId' => __('address_books.fields.rustdesk_id'), 'entryAlias' => __('address_books.validation.alias')]);
 
             $book->entries()->create([
                 'rustdesk_id' => trim($this->entryRustdeskId),
@@ -409,10 +409,10 @@ class AddressBookManager extends Component
             $rules['ruleSubjectId'] = 'required|integer|exists:user_groups,id';
         }
 
-        $this->validate($rules, [], [
-            'ruleSubjectType' => 'subject',
-            'ruleSubjectId' => 'subject',
-            'rulePermission' => 'permission',
+        $this->validate($rules, __('address_books.validation.messages'), [
+            'ruleSubjectType' => __('address_books.validation.subject'),
+            'ruleSubjectId' => __('address_books.validation.subject'),
+            'rulePermission' => __('address_books.validation.permission'),
         ]);
 
         AddressBookRule::create([
@@ -422,7 +422,7 @@ class AddressBookManager extends Component
             'permission' => $this->rulePermission,
         ]);
 
-        ConsoleAudit::record('address-book.rule-add', 'Added sharing rule to address book '.$book->name, 'address-book', $book->name);
+        ConsoleAudit::record('address-book.rule-add', __('address_books.audit.rule_added', ['name' => $book->name], 'en'), 'address-book', $book->name);
 
         $this->closeModal();
     }
@@ -440,7 +440,7 @@ class AddressBookManager extends Component
         $rule = AddressBookRule::where('address_book_id', $this->selectedBookId)->findOrFail($id);
         $rule->update(['permission' => $permission]);
 
-        ConsoleAudit::record('address-book.rule-update', 'Updated sharing rule on address book '.$this->book()?->name, 'address-book', $this->book()?->name);
+        ConsoleAudit::record('address-book.rule-update', __('address_books.audit.rule_updated', ['name' => $this->book()?->name], 'en'), 'address-book', $this->book()?->name);
     }
 
     public function deleteRule(int $id): void
@@ -451,7 +451,7 @@ class AddressBookManager extends Component
 
         AddressBookRule::where('address_book_id', $this->selectedBookId)->findOrFail($id)->delete();
 
-        ConsoleAudit::record('address-book.rule-delete', 'Removed sharing rule from address book '.$this->book()?->name, 'address-book', $this->book()?->name);
+        ConsoleAudit::record('address-book.rule-delete', __('address_books.audit.rule_removed', ['name' => $this->book()?->name], 'en'), 'address-book', $this->book()?->name);
     }
 
     /* ---------------------------------------------------------------------
@@ -583,9 +583,9 @@ class AddressBookManager extends Component
             'users' => User::orderBy('username')->get(['id', 'username', 'name']),
             'userGroups' => UserGroup::orderBy('name')->get(['id', 'name']),
             'permissionLabels' => [
-                AddressBookRule::PERM_READ => 'Read',
-                AddressBookRule::PERM_READ_WRITE => 'Read/Write',
-                AddressBookRule::PERM_FULL => 'Full Control',
+                AddressBookRule::PERM_READ => __('address_books.permissions.read'),
+                AddressBookRule::PERM_READ_WRITE => __('address_books.permissions.read_write'),
+                AddressBookRule::PERM_FULL => __('address_books.permissions.full'),
             ],
         ]);
     }

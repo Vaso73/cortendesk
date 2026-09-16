@@ -20,6 +20,14 @@ class AuditConnection extends Model
         4 => 'Terminal',
     ];
 
+    private const TYPE_TRANSLATION_KEYS = [
+        0 => 'remote_control',
+        1 => 'file_transfer',
+        2 => 'port_forward',
+        3 => 'view_camera',
+        4 => 'terminal',
+    ];
+
     private const TYPE_ICONS = [
         0 => 'ri-remote-control-line',
         1 => 'ri-file-transfer-line',
@@ -28,10 +36,14 @@ class AuditConnection extends Model
         4 => 'ri-terminal-box-line',
     ];
 
-    /** Human label for a session type; "Type N" when unknown, so nothing is lost. */
+    /** Human label for a session type; localized "Type N" when unknown. */
     public static function typeLabel(int $type): string
     {
-        return self::TYPE_LABELS[$type] ?? 'Type '.$type;
+        $key = self::TYPE_TRANSLATION_KEYS[$type] ?? null;
+
+        return $key === null
+            ? __('audit.unknown_type', ['type' => $type])
+            : __("audit.connection_types.{$key}");
     }
 
     /** Remix icon class for a session type. */

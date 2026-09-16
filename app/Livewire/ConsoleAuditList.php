@@ -51,6 +51,15 @@ class ConsoleAuditList extends Component
         'logs.prune' => 'Logs pruned',
     ];
 
+    public static function actionLabel(string $action): string
+    {
+        if (! array_key_exists($action, self::ACTIONS)) {
+            return $action;
+        }
+
+        return __('audit.actions.'.str_replace(['.', '-'], '_', $action));
+    }
+
     #[Url(except: '')]
     public string $search = '';
 
@@ -150,7 +159,9 @@ class ConsoleAuditList extends Component
     {
         return view('livewire.console-audit-list', [
             'audits' => $this->query()->paginate($this->perPage),
-            'actions' => self::ACTIONS,
+            'actions' => collect(array_keys(self::ACTIONS))->mapWithKeys(fn (string $action) => [
+                $action => self::actionLabel($action),
+            ])->all(),
         ]);
     }
 }

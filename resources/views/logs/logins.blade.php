@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Login Log')
-@section('subtitle', 'Logs')
+@section('title', __('audit.pages.logins.title'))
+@section('subtitle', __('audit.section'))
 
 @section('content')
     @livewire(App\Livewire\LoginLogList::class)

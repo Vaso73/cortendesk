@@ -6,27 +6,27 @@
             <div class="rd-toolbar-search">
                 <div class="input-group">
                     <span class="input-group-text"><i class="ri-search-line"></i></span>
-                    <input type="search" class="form-control" placeholder="Search operator or details…"
+                    <input type="search" class="form-control" placeholder="{{ __('audit.search.console') }}"
                            wire:model.live.debounce.300ms="search">
                 </div>
             </div>
-            <select class="form-select rd-toolbar-filter" wire:model.live="action" aria-label="Action">
-                <option value="">All actions</option>
+            <select class="form-select rd-toolbar-filter" wire:model.live="action" aria-label="{{ __('audit.filters.action') }}">
+                <option value="">{{ __('audit.filters.all_actions') }}</option>
                 @foreach ($actions as $value => $label)
                     <option value="{{ $value }}">{{ $label }}</option>
                 @endforeach
             </select>
-            <input type="date" class="form-control rd-toolbar-filter" wire:model.live="dateFrom" aria-label="From date">
-            <input type="date" class="form-control rd-toolbar-filter" wire:model.live="dateTo" aria-label="To date">
-            <select class="form-select rd-toolbar-narrow" wire:model.live="perPage" aria-label="Rows per page">
+            <input type="date" class="form-control rd-toolbar-filter" wire:model.live="dateFrom" aria-label="{{ __('audit.filters.from_date') }}">
+            <input type="date" class="form-control rd-toolbar-filter" wire:model.live="dateTo" aria-label="{{ __('audit.filters.to_date') }}">
+            <select class="form-select rd-toolbar-narrow" wire:model.live="perPage" aria-label="{{ __('audit.filters.rows_per_page') }}">
                 <option value="20">20</option>
                 <option value="50">50</option>
                 <option value="100">100</option>
             </select>
             <div class="rd-toolbar-actions">
-                <button type="button" class="btn btn-outline-light" wire:click="resetFilters">Reset</button>
+                <button type="button" class="btn btn-outline-light" wire:click="resetFilters">{{ __('audit.filters.reset') }}</button>
                 <button type="button" class="btn btn-primary" wire:click="export">
-                    <i class="ri-download-2-line"></i>Export CSV
+                    <i class="ri-download-2-line"></i>{{ __('audit.filters.export_csv') }}
                 </button>
             </div>
         </div>
@@ -36,12 +36,12 @@
             <table class="table table-hover table-centered mb-0">
                 <thead>
                 <tr>
-                    <th>Time</th>
-                    <th>Operator</th>
-                    <th>Action</th>
-                    <th>Target</th>
-                    <th>Details</th>
-                    <th>IP</th>
+                    <th>{{ __('audit.columns.time') }}</th>
+                    <th>{{ __('audit.columns.operator') }}</th>
+                    <th>{{ __('audit.columns.action') }}</th>
+                    <th>{{ __('audit.columns.target') }}</th>
+                    <th>{{ __('audit.columns.details') }}</th>
+                    <th>{{ __('audit.columns.ip') }}</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -57,7 +57,7 @@
                             </span>
                         </td>
                         <td>
-                            <span class="badge bg-secondary-subtle text-secondary">{{ $audit->action }}</span>
+                            <span class="badge bg-secondary-subtle text-secondary">{{ \App\Livewire\ConsoleAuditList::actionLabel($audit->action) }}</span>
                         </td>
                         <td>
                             @if ($audit->target_type || $audit->target_id)
@@ -75,9 +75,9 @@
                         <td colspan="6" class="rd-empty-cell">
                             <div class="rd-empty">
                                 <div class="rd-empty-icon"><i class="ri-history-line"></i></div>
-                                <p class="rd-empty-title">No audit entries match your filters.</p>
-                                <p class="rd-empty-text">Changes made in the console — users, roles, settings — are recorded here.</p>
-                                <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetFilters">Clear filters</button>
+                                <p class="rd-empty-title">{{ __('audit.empty.console.title') }}</p>
+                                <p class="rd-empty-text">{{ __('audit.empty.console.text') }}</p>
+                                <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetFilters">{{ __('audit.filters.clear') }}</button>
                             </div>
                         </td>
                     </tr>
@@ -95,7 +95,7 @@
                             <span class="rd-mini-title">{{ $audit->username }}</span>
                             <span class="rd-mini-sub">{{ $audit->summary }}</span>
                         </div>
-                        <span class="badge bg-secondary-subtle text-secondary">{{ $audit->action }}</span>
+                        <span class="badge bg-secondary-subtle text-secondary">{{ \App\Livewire\ConsoleAuditList::actionLabel($audit->action) }}</span>
                     </div>
                     <div class="rd-mini-foot">
                         <span class="rd-mini-sub">
@@ -109,15 +109,15 @@
             @empty
                 <div class="rd-empty">
                     <div class="rd-empty-icon"><i class="ri-history-line"></i></div>
-                    <p class="rd-empty-title">No audit entries match your filters.</p>
-                    <p class="rd-empty-text">Changes made in the console — users, roles, settings — are recorded here.</p>
-                    <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetFilters">Clear filters</button>
+                    <p class="rd-empty-title">{{ __('audit.empty.console.title') }}</p>
+                    <p class="rd-empty-text">{{ __('audit.empty.console.text') }}</p>
+                    <button type="button" class="btn btn-sm btn-outline-light" wire:click="resetFilters">{{ __('audit.filters.clear') }}</button>
                 </div>
             @endforelse
         </div>
 
         <div class="rd-tablefoot">
-            <span>Showing {{ $audits->firstItem() ?? 0 }}–{{ $audits->lastItem() ?? 0 }} of {{ $audits->total() }}</span>
+            <span>{{ __('audit.pagination.summary', ['from' => $audits->firstItem() ?? 0, 'to' => $audits->lastItem() ?? 0, 'total' => $audits->total()]) }}</span>
             {{ $audits->links() }}
         </div>
     </div>
