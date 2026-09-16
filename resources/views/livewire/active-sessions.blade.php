@@ -7,12 +7,12 @@
     <div class="card">
         <div class="card-header d-flex flex-wrap align-items-center gap-2">
             <div class="min-width-0">
-                <h5 class="card-title">Active Sessions</h5>
-                <div class="rd-card-sub">Connections open right now</div>
+                <h5 class="card-title">{{ __('auth.sessions.title') }}</h5>
+                <div class="rd-card-sub">{{ __('auth.sessions.subtitle') }}</div>
             </div>
             @if ($activeCount > 0)
                 <div class="rd-card-actions">
-                    <span class="badge bg-success-subtle text-success"><i class="rd-dot"></i>{{ $activeCount }} live</span>
+                    <span class="badge bg-success-subtle text-success"><i class="rd-dot"></i>{{ __('auth.sessions.live', ['count' => $activeCount]) }}</span>
                 </div>
             @endif
         </div>
@@ -20,9 +20,9 @@
             @if ($sessions->isEmpty())
                 <div class="rd-empty">
                     <div class="rd-empty-icon"><i class="ri-broadcast-line"></i></div>
-                    <p class="rd-empty-title">No active sessions</p>
-                    <p class="rd-empty-text">Sessions appear here the moment a client connects to one of your devices.</p>
-                    <a href="{{ route('logs.connections') }}" class="btn btn-sm btn-outline-light">View the connection log</a>
+                    <p class="rd-empty-title">{{ __('auth.sessions.empty_title') }}</p>
+                    <p class="rd-empty-text">{{ __('auth.sessions.empty_text') }}</p>
+                    <a href="{{ route('logs.connections') }}" class="btn btn-sm btn-outline-light">{{ __('auth.sessions.view_log') }}</a>
                 </div>
             @else
                 {{-- Desktop table (md and up) --}}
@@ -30,12 +30,12 @@
                     <table class="table table-hover table-centered align-middle mb-0">
                         <thead>
                         <tr>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Type</th>
-                            <th>Started</th>
+                            <th>{{ __('auth.sessions.from') }}</th>
+                            <th>{{ __('auth.sessions.to') }}</th>
+                            <th>{{ __('auth.sessions.type') }}</th>
+                            <th>{{ __('auth.sessions.started') }}</th>
                             @if ($canDisconnect)
-                                <th class="text-end">Action</th>
+                                <th class="text-end">{{ __('auth.sessions.action') }}</th>
                             @endif
                         </tr>
                         </thead>
@@ -56,13 +56,16 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <a href="rustdesk://{{ $s->rustdesk_id }}" title="Connect with RustDesk" class="fs-13">{{ $s->rustdesk_id }}</a>
+                                    <a href="rustdesk://{{ $s->rustdesk_id }}" title="{{ __('auth.sessions.connect_title') }}" class="fs-13">{{ $s->rustdesk_id }}</a>
                                 </td>
                                 <td>
                                     @switch((int) $s->conn_type)
-                                        @case(1)<span class="badge bg-primary-subtle text-primary">File</span>@break
-                                        @case(2)<span class="badge bg-warning-subtle text-warning">Port Fwd</span>@break
-                                        @default<span class="badge bg-info-subtle text-info">{{ \App\Models\AuditConnection::typeLabel((int) $s->conn_type) }}</span>
+                                        @case(0)<span class="badge bg-info-subtle text-info">{{ __('auth.sessions.remote_control') }}</span>@break
+                                        @case(1)<span class="badge bg-primary-subtle text-primary">{{ __('auth.sessions.file_transfer') }}</span>@break
+                                        @case(2)<span class="badge bg-warning-subtle text-warning">{{ __('auth.sessions.port_forwarding') }}</span>@break
+                                        @case(3)<span class="badge bg-info-subtle text-info">{{ __('auth.sessions.view_camera') }}</span>@break
+                                        @case(4)<span class="badge bg-info-subtle text-info">{{ __('auth.sessions.terminal') }}</span>@break
+                                        @default<span class="badge bg-info-subtle text-info">{{ __('auth.sessions.unknown_type', ['type' => (int) $s->conn_type]) }}</span>
                                     @endswitch
                                 </td>
                                 <td>
@@ -74,10 +77,10 @@
                                         @if ($s->isDisconnecting())
                                             {{-- The console cannot close the session itself; it waits for
                                                  the device's next heartbeat to carry the instruction. --}}
-                                            <span class="badge bg-warning-subtle text-warning" title="Sent on the device's next heartbeat">Disconnecting…</span>
+                                            <span class="badge bg-warning-subtle text-warning" title="{{ __('auth.sessions.disconnecting_help') }}">{{ __('auth.sessions.disconnecting') }}</span>
                                         @else
                                             <a href="#" class="text-danger fs-13" wire:click.prevent="disconnect({{ $s->id }})"
-                                               wire:confirm="End this session on {{ $s->rustdesk_id }}?">Disconnect</a>
+                                               wire:confirm="{{ __('auth.sessions.disconnect_confirm', ['id' => $s->rustdesk_id]) }}">{{ __('auth.sessions.disconnect') }}</a>
                                         @endif
                                     </td>
                                 @endif
@@ -107,23 +110,26 @@
                                     </div>
                                 </div>
                                 @switch((int) $s->conn_type)
-                                    @case(1)<span class="badge bg-primary-subtle text-primary">File</span>@break
-                                    @case(2)<span class="badge bg-warning-subtle text-warning">Port Fwd</span>@break
-                                    @default<span class="badge bg-info-subtle text-info">{{ \App\Models\AuditConnection::typeLabel((int) $s->conn_type) }}</span>
+                                    @case(0)<span class="badge bg-info-subtle text-info">{{ __('auth.sessions.remote_control') }}</span>@break
+                                    @case(1)<span class="badge bg-primary-subtle text-primary">{{ __('auth.sessions.file_transfer') }}</span>@break
+                                    @case(2)<span class="badge bg-warning-subtle text-warning">{{ __('auth.sessions.port_forwarding') }}</span>@break
+                                    @case(3)<span class="badge bg-info-subtle text-info">{{ __('auth.sessions.view_camera') }}</span>@break
+                                    @case(4)<span class="badge bg-info-subtle text-info">{{ __('auth.sessions.terminal') }}</span>@break
+                                    @default<span class="badge bg-info-subtle text-info">{{ __('auth.sessions.unknown_type', ['type' => (int) $s->conn_type]) }}</span>
                                 @endswitch
                             </div>
                             @if ($canDisconnect)
                                 <div class="text-end">
                                     @if ($s->isDisconnecting())
-                                        <span class="badge bg-warning-subtle text-warning">Disconnecting…</span>
+                                        <span class="badge bg-warning-subtle text-warning">{{ __('auth.sessions.disconnecting') }}</span>
                                     @else
                                         <a href="#" class="text-danger fs-13" wire:click.prevent="disconnect({{ $s->id }})"
-                                           wire:confirm="End this session on {{ $s->rustdesk_id }}?">Disconnect</a>
+                                           wire:confirm="{{ __('auth.sessions.disconnect_confirm', ['id' => $s->rustdesk_id]) }}">{{ __('auth.sessions.disconnect') }}</a>
                                     @endif
                                 </div>
                             @endif
                             <div class="rd-mini-foot">
-                                <a href="rustdesk://{{ $s->rustdesk_id }}" title="Connect with RustDesk"
+                                <a href="rustdesk://{{ $s->rustdesk_id }}" title="{{ __('auth.sessions.connect_title') }}"
                                    class="fs-13 text-truncate">{{ $s->rustdesk_id }}</a>
                                 <span class="rd-mini-sub text-nowrap"><i class="rd-dot text-success"></i><span
                                         title="{{ $s->created_at }}">{{ $s->created_at->diffForHumans(short: true) }}</span></span>

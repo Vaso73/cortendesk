@@ -52,6 +52,11 @@ class AccountProfile extends Component
         $validated = $this->validate([
             'name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+        ], [
+            'name.max' => __('auth.validation.max', ['attribute' => __('auth.validation.attributes.name'), 'max' => 255]),
+            'email.email' => __('auth.validation.email'),
+            'email.max' => __('auth.validation.max', ['attribute' => __('auth.validation.attributes.email'), 'max' => 255]),
+            'email.unique' => __('auth.validation.unique_email'),
         ]);
 
         $user->forceFill([
@@ -72,7 +77,7 @@ class AccountProfile extends Component
         // form isn't rendered for them — guard the action too, since a Livewire
         // call doesn't have to come from the rendered UI.
         if ($user->isSsoProvisioned()) {
-            $this->addError('currentPassword', 'This account signs in through single sign-on.');
+            $this->addError('currentPassword', __('auth.login.sso_account'));
 
             return;
         }
@@ -82,14 +87,17 @@ class AccountProfile extends Component
             'password' => ['required', 'string', 'min:8', 'same:passwordConfirmation'],
             'passwordConfirmation' => ['required', 'string'],
         ], [
-            'password.same' => 'The new passwords do not match.',
-            'passwordConfirmation.required' => 'Please confirm the new password.',
+            'currentPassword.required' => __('auth.validation.required', ['attribute' => __('auth.validation.attributes.current_password')]),
+            'password.required' => __('auth.validation.required', ['attribute' => __('auth.validation.attributes.new_password')]),
+            'password.min' => __('auth.validation.min', ['attribute' => __('auth.validation.attributes.new_password'), 'min' => 8]),
+            'password.same' => __('auth.account.passwords_mismatch'),
+            'passwordConfirmation.required' => __('auth.account.confirm_required'),
         ]);
 
         // Proving knowledge of the current password is what stops a hijacked
         // session from locking the real owner out.
         if (! Hash::check($this->currentPassword, $user->password)) {
-            $this->addError('currentPassword', 'That is not your current password.');
+            $this->addError('currentPassword', __('auth.account.current_password_incorrect'));
 
             return;
         }

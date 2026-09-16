@@ -1,19 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'My Account')
-@section('subtitle', 'Account')
+@section('title', __('auth.account.title'))
+@section('subtitle', __('auth.common.account'))
 
 @section('content')
     @if (session('email_required'))
         <div class="alert alert-warning">
-            <i class="ri-mail-line me-1"></i>{{ session('email_required') }}
+            <i class="ri-mail-line me-1"></i>{{ __('auth.account.email_required') }}
         </div>
     @elseif (trim((string) auth()->user()->email) === '' && ! auth()->user()->isSsoProvisioned())
         {{-- Not enforced, just overdue: without an address we cannot send an
              invitation, a sign-in code, or anything else this account needs. --}}
         <div class="alert alert-info">
-            <i class="ri-mail-line me-1"></i>Your account has no email address. Add one so the
-            console can reach you.
+            <i class="ri-mail-line me-1"></i>{{ __('auth.account.missing_email') }}
         </div>
     @endif
 

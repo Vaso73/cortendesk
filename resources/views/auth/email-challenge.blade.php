@@ -1,6 +1,6 @@
 @extends('layouts.guest')
 
-@section('title', 'Verify Sign-In')
+@section('title', __('auth.email_challenge.title'))
 
 @section('content')
     <div class="card">
@@ -15,9 +15,13 @@
         <div class="card-body p-4">
 
             <div class="text-center mb-4">
-                <h4 class="rd-auth-title">Check your email</h4>
+                <h4 class="rd-auth-title">{{ __('auth.email_challenge.heading') }}</h4>
                 <p class="rd-auth-sub">
-                    This browser is new to the console, so we emailed a 6-digit code @if ($sentTo) to <span class="rd-mono">{{ $sentTo }}</span>@endif. Enter it below.
+                    @if ($sentTo)
+                        {!! __('auth.email_challenge.intro_sent_to', ['email' => '<span class="rd-mono">'.e($sentTo).'</span>']) !!}
+                    @else
+                        {{ __('auth.email_challenge.intro') }}
+                    @endif
                 </p>
             </div>
 
@@ -35,7 +39,7 @@
                 @csrf
 
                 <div class="mb-3">
-                    <label for="code" class="form-label">Verification code</label>
+                    <label for="code" class="form-label">{{ __('auth.email_challenge.code') }}</label>
                     <input class="form-control rd-code-input rd-mono" type="text" id="code" name="code"
                            required autofocus autocomplete="one-time-code" inputmode="numeric" maxlength="6"
                            placeholder="123456">
@@ -43,7 +47,7 @@
 
                 <div class="mb-0 d-grid">
                     <button class="btn btn-primary" type="submit">
-                        <i class="ri-mail-check-line me-1"></i> Verify
+                        <i class="ri-mail-check-line me-1"></i> {{ __('auth.email_challenge.submit') }}
                     </button>
                 </div>
             </form>
@@ -51,12 +55,12 @@
             <div class="rd-auth-foot">
                 <form method="POST" action="{{ route('login.email.resend') }}" class="d-inline">
                     @csrf
-                    <button type="submit" class="btn btn-link btn-sm p-0">Send a new code</button>
+                    <button type="submit" class="btn btn-link btn-sm p-0">{{ __('auth.email_challenge.resend') }}</button>
                 </form>
                 <span class="mx-1">·</span>
-                <a href="{{ route('login') }}">Sign in as someone else</a>
+                <a href="{{ route('login') }}">{{ __('auth.email_challenge.switch_user') }}</a>
                 <span class="rd-auth-foot-note">
-                    Once verified, this browser is remembered for {{ \App\Models\TrustedDevice::trustDays() }} days.
+                    {{ __('auth.email_challenge.remembered', ['days' => \App\Models\TrustedDevice::trustDays()]) }}
                 </span>
             </div>
         </div>

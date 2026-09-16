@@ -22,9 +22,6 @@ use Illuminate\View\View;
  */
 class PasswordResetController extends Controller
 {
-    /** Shown whatever happens, so the form cannot be used to enumerate accounts. */
-    private const NEUTRAL = 'If that account exists and has an email address, a reset link is on its way.';
-
     public function __construct(
         private readonly MailSettings $mail,
         private readonly OidcService $oidc,
@@ -45,7 +42,10 @@ class PasswordResetController extends Controller
             return redirect()->route('login');
         }
 
-        $request->validate(['login' => ['required', 'string', 'max:255']]);
+        $request->validate(['login' => ['required', 'string', 'max:255']], [
+            'login.required' => __('auth.validation.required', ['attribute' => __('auth.validation.attributes.login')]),
+            'login.max' => __('auth.validation.max', ['attribute' => __('auth.validation.attributes.login'), 'max' => 255]),
+        ]);
         $login = trim((string) $request->input('login'));
 
         $user = User::query()
@@ -63,14 +63,14 @@ class PasswordResetController extends Controller
             Log::info('Password reset refused', ['user' => $user->username, 'reason' => $this->refusal($user)]);
         }
 
-        return back()->with('status', self::NEUTRAL);
+        return back()->with('status', __('auth.password_request.neutral'));
     }
 
     public function showReset(Request $request, string $token): View|RedirectResponse
     {
         if (! $this->available() || ! PasswordReset::findValid($token)) {
             return redirect()->route('login')
-                ->withErrors(['username' => 'That reset link is invalid or has expired. Request a new one.']);
+                ->withErrors(['username' => __('auth.password_reset.invalid_link')]);
         }
 
         return view('auth.password-reset', ['token' => $token]);
@@ -84,20 +84,24 @@ class PasswordResetController extends Controller
 
         $request->validate([
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'password.required' => __('auth.validation.required', ['attribute' => __('auth.validation.attributes.new_password')]),
+            'password.min' => __('auth.validation.min', ['attribute' => __('auth.validation.attributes.new_password'), 'min' => 8]),
+            'password.confirmed' => __('auth.validation.confirmed', ['attribute' => __('auth.validation.attributes.new_password')]),
         ]);
 
         $reset = PasswordReset::findValid($token);
 
         if (! $reset || ! $reset->user || ! $this->mayReset($reset->user)) {
             return redirect()->route('login')
-                ->withErrors(['username' => 'That reset link is invalid or has expired. Request a new one.']);
+                ->withErrors(['username' => __('auth.password_reset.invalid_link')]);
         }
 
         // Burn the link BEFORE changing anything: if two submissions race, only
         // the one that claims the row proceeds.
         if (! $reset->claim()) {
             return redirect()->route('login')
-                ->withErrors(['username' => 'That reset link has already been used.']);
+                ->withErrors(['username' => __('auth.password_reset.used_link')]);
         }
 
         $user = $reset->user;
@@ -118,10 +122,10 @@ class PasswordResetController extends Controller
         ]);
 
         return redirect()->route('login')
-            ->with('status', 'Your password has been reset. Sign in with the new one.');
+            ->with('status', __('auth.password_reset.success'));
     }
 
-    /** Send the link. Failures are logged, never surfaced (see NEUTRAL). */
+    /** Send the link. Failures are logged, never surfaced to the requester. */
     private function dispatchLink(User $user, Request $request): void
     {
         [$reset, $plain] = PasswordReset::issue($user, $request->ip());

@@ -62,13 +62,15 @@ class TwoFactorSettings extends Component
 
         $this->validate([
             'confirmCode' => ['required', 'string'],
+        ], [
+            'confirmCode.required' => __('auth.validation.required', ['attribute' => __('auth.validation.attributes.code')]),
         ]);
 
         $secret = (string) session(self::SESSION_SECRET);
         $timestep = $secret !== '' ? TwoFactor::verify($secret, $this->confirmCode) : null;
 
         if ($timestep === null) {
-            $this->addError('confirmCode', 'That code is incorrect or has expired. Try the current one.');
+            $this->addError('confirmCode', __('auth.two_factor.invalid_setup_code'));
 
             return;
         }
@@ -99,10 +101,12 @@ class TwoFactorSettings extends Component
 
         $this->validate([
             'disablePassword' => ['required', 'string'],
-        ], [], ['disablePassword' => 'password']);
+        ], [
+            'disablePassword.required' => __('auth.validation.required', ['attribute' => __('auth.validation.attributes.password')]),
+        ], ['disablePassword' => __('auth.validation.attributes.password')]);
 
         if (! Hash::check($this->disablePassword, $user->password)) {
-            $this->addError('disablePassword', 'That password is incorrect.');
+            $this->addError('disablePassword', __('auth.two_factor.incorrect_password'));
 
             return;
         }
@@ -122,17 +126,19 @@ class TwoFactorSettings extends Component
 
         // Never let an enforced user disable their way out of the requirement.
         if (RequireTwoFactor::isRequiredFor($user)) {
-            $this->addError('disablePassword', 'Two-factor authentication is required for your account and cannot be disabled.');
+            $this->addError('disablePassword', __('auth.two_factor.cannot_disable'));
 
             return;
         }
 
         $this->validate([
             'disablePassword' => ['required', 'string'],
-        ], [], ['disablePassword' => 'password']);
+        ], [
+            'disablePassword.required' => __('auth.validation.required', ['attribute' => __('auth.validation.attributes.password')]),
+        ], ['disablePassword' => __('auth.validation.attributes.password')]);
 
         if (! Hash::check($this->disablePassword, $user->password)) {
-            $this->addError('disablePassword', 'That password is incorrect.');
+            $this->addError('disablePassword', __('auth.two_factor.incorrect_password'));
 
             return;
         }

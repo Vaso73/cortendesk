@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Two-Factor Authentication')
-@section('subtitle', 'Account')
+@section('title', __('auth.two_factor.title'))
+@section('subtitle', __('auth.common.account'))
 
 @section('content')
     @if (session('twofactor_enforced'))
         <div class="alert alert-warning">
-            <i class="ri-shield-keyhole-line me-1"></i>{{ session('twofactor_enforced') }}
+            <i class="ri-shield-keyhole-line me-1"></i>{{ __('auth.two_factor.enforced') }}
         </div>
     @endif
 

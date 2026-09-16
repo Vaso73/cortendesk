@@ -1,6 +1,6 @@
 @extends('layouts.guest')
 
-@section('title', 'Reset Password')
+@section('title', __('auth.password_request.title'))
 
 @section('content')
     <div class="card">
@@ -14,8 +14,8 @@
 
         <div class="card-body p-4">
             <div class="text-center mb-4">
-                <h4 class="rd-auth-title">Reset Password</h4>
-                <p class="rd-auth-sub">Enter your username or email address and we'll send you a link to choose a new password.</p>
+                <h4 class="rd-auth-title">{{ __('auth.password_request.title') }}</h4>
+                <p class="rd-auth-sub">{{ __('auth.password_request.intro') }}</p>
             </div>
 
             @if (session('status'))
@@ -29,20 +29,20 @@
             <form method="POST" action="{{ route('password.email') }}">
                 @csrf
                 <div class="mb-3">
-                    <label for="login" class="form-label">Username or email</label>
+                    <label for="login" class="form-label">{{ __('auth.password_request.login') }}</label>
                     <input class="form-control" type="text" id="login" name="login"
                            value="{{ old('login') }}" required autofocus autocomplete="username">
                 </div>
 
                 <div class="mb-0 d-grid">
                     <button class="btn btn-primary" type="submit">
-                        <i class="ri-mail-send-line me-1"></i> Send Reset Link
+                        <i class="ri-mail-send-line me-1"></i> {{ __('auth.password_request.submit') }}
                     </button>
                 </div>
             </form>
 
             <div class="rd-auth-foot">
-                <a href="{{ route('login') }}"><i class="ri-arrow-left-line me-1"></i>Back to sign in</a>
+                <a href="{{ route('login') }}"><i class="ri-arrow-left-line me-1"></i>{{ __('auth.common.back_to_sign_in') }}</a>
             </div>
         </div>
     </div>

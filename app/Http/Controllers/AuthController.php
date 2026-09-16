@@ -70,13 +70,16 @@ class AuthController extends Controller
         // lock the console — password login comes back on its own.
         if ($this->oidc->localLoginDisabled()) {
             return back()->withErrors([
-                'username' => 'Password sign-in is disabled on this console. Use single sign-on.',
+                'username' => __('auth.login.password_disabled'),
             ]);
         }
 
         $credentials = $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],
+        ], [
+            'username.required' => __('auth.validation.required', ['attribute' => __('auth.validation.attributes.username')]),
+            'password.required' => __('auth.validation.required', ['attribute' => __('auth.validation.attributes.password')]),
         ]);
 
         $ip = (string) $request->ip();
@@ -129,7 +132,7 @@ class AuthController extends Controller
 
             return back()
                 ->withInput($request->only('username'))
-                ->withErrors(['username' => 'Invalid username or password.']);
+                ->withErrors(['username' => __('auth.login.invalid_credentials')]);
         }
 
         // Clear only the account counter. The address counter deliberately
@@ -143,7 +146,7 @@ class AuthController extends Controller
         if ($user->isSsoProvisioned()) {
             return back()
                 ->withInput($request->only('username'))
-                ->withErrors(['username' => 'This account signs in through single sign-on.']);
+                ->withErrors(['username' => __('auth.login.sso_account')]);
         }
 
         // A linked account still awaiting approval must not get in by password
@@ -151,7 +154,7 @@ class AuthController extends Controller
         if ($user->isSsoPending()) {
             return back()
                 ->withInput($request->only('username'))
-                ->withErrors(['username' => 'Your account is waiting for administrator approval.']);
+                ->withErrors(['username' => __('auth.login.approval_pending')]);
         }
 
         // 2FA enrolled → stash a pending marker and hand off to the challenge.
@@ -183,7 +186,7 @@ class AuthController extends Controller
             if (! $this->mayRepairMail($user)) {
                 return back()
                     ->withInput($request->only('username'))
-                    ->withErrors(['username' => 'Sign-in is temporarily unavailable: this console cannot send verification codes. Contact an administrator.']);
+                    ->withErrors(['username' => __('auth.login.verification_unavailable')]);
             }
 
             $request->session()->put('mail_repair', true);
@@ -215,10 +218,12 @@ class AuthController extends Controller
 
         if (! $user) {
             return redirect()->route('login')
-                ->withErrors(['code' => 'Your sign-in session expired. Please sign in again.']);
+                ->withErrors(['code' => __('auth.login.session_expired')]);
         }
 
-        $request->validate(['code' => ['required', 'string']]);
+        $request->validate(['code' => ['required', 'string']], [
+            'code.required' => __('auth.validation.required', ['attribute' => __('auth.validation.attributes.code')]),
+        ]);
         $code = preg_replace('/\D/', '', (string) $request->input('code')) ?? '';
 
         // Same budget as the TOTP step. Someone grinding codes here already
@@ -235,7 +240,7 @@ class AuthController extends Controller
         if ($hash === '' || ! Hash::check($code, $hash)) {
             RateLimiter::hit($throttleKey, self::DECAY);
 
-            return back()->withErrors(['code' => 'That code is incorrect or has expired.']);
+            return back()->withErrors(['code' => __('auth.email_challenge.invalid_code')]);
         }
 
         RateLimiter::clear($throttleKey);
@@ -272,7 +277,7 @@ class AuthController extends Controller
                 $request->session()->forget('email_verify');
 
                 return redirect()->route('login')->withErrors([
-                    'username' => 'Sign-in is temporarily unavailable: this console cannot send verification codes. Contact an administrator.',
+                    'username' => __('auth.login.verification_unavailable'),
                 ]);
             }
 
@@ -284,7 +289,7 @@ class AuthController extends Controller
             return redirect()->route('settings', ['tab' => 'email']);
         }
 
-        return back()->with('status', 'A new code is on its way.');
+        return back()->with('status', __('auth.email_challenge.new_code_sent'));
     }
 
     /**
@@ -299,7 +304,7 @@ class AuthController extends Controller
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $sent = app(MailSettings::class)->send(
-            new LoginVerificationCode($code, $user->username, (string) $request->ip(), (int) (self::EMAIL_PENDING_TTL / 60)),
+            new LoginVerificationCode($code, $user, (string) $request->ip(), (int) (self::EMAIL_PENDING_TTL / 60)),
             (string) $user->email,
         );
 
@@ -378,10 +383,12 @@ class AuthController extends Controller
         $user = $this->pendingUser($request);
         if (! $user) {
             return redirect()->route('login')
-                ->withErrors(['code' => 'Your sign-in session expired. Please sign in again.']);
+                ->withErrors(['code' => __('auth.login.session_expired')]);
         }
 
-        $request->validate(['code' => ['required', 'string']]);
+        $request->validate(['code' => ['required', 'string']], [
+            'code.required' => __('auth.validation.required', ['attribute' => __('auth.validation.attributes.code')]),
+        ]);
         $code = trim((string) $request->input('code'));
 
         // Throttle the 2FA step: 5 tries per user+IP per minute. Someone
@@ -481,12 +488,12 @@ class AuthController extends Controller
         $timestep = $secret ? TwoFactor::verify($secret, $code) : null;
 
         if ($timestep === null) {
-            return ['ok' => false, 'message' => 'That code is incorrect or has expired.'];
+            return ['ok' => false, 'message' => __('auth.email_challenge.invalid_code')];
         }
 
         // Replay guard: reject a code from a timestep already used (or older).
         if ($user->totp_last_timestep !== null && $timestep <= $user->totp_last_timestep) {
-            return ['ok' => false, 'message' => 'That code has already been used. Wait for the next one.'];
+            return ['ok' => false, 'message' => __('auth.two_factor_challenge.used_code')];
         }
 
         $user->forceFill(['totp_last_timestep' => $timestep])->save();
@@ -507,7 +514,7 @@ class AuthController extends Controller
             ->first(fn ($rc) => Hash::check($normalized, $rc->code_hash));
 
         if (! $match) {
-            return ['ok' => false, 'message' => 'That recovery code is invalid or already used.'];
+            return ['ok' => false, 'message' => __('auth.two_factor_challenge.invalid_recovery_code')];
         }
 
         // Burn the code atomically: the conditional UPDATE only affects the row
@@ -519,12 +526,12 @@ class AuthController extends Controller
             ->update(['used_at' => now()]);
 
         if ($claimed === 0) {
-            return ['ok' => false, 'message' => 'That recovery code is invalid or already used.'];
+            return ['ok' => false, 'message' => __('auth.two_factor_challenge.invalid_recovery_code')];
         }
 
         $remaining = $user->recoveryCodes()->whereNull('used_at')->count();
         $warning = $remaining <= TwoFactor::RECOVERY_LOW_THRESHOLD
-            ? "You have {$remaining} recovery code(s) left. Regenerate them from Account → Two-Factor Authentication."
+            ? trans_choice('auth.two_factor_challenge.recovery_low', $remaining, ['count' => $remaining])
             : null;
 
         return ['ok' => true, 'warning' => $warning];
@@ -566,7 +573,7 @@ class AuthController extends Controller
         $seconds = RateLimiter::availableIn($key);
 
         throw ValidationException::withMessages([
-            $field => "Too many attempts. Try again in {$seconds} seconds.",
+            $field => __('auth.login.too_many_attempts', ['seconds' => $seconds]),
         ]);
     }
 }

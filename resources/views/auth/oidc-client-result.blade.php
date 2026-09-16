@@ -1,6 +1,6 @@
 @extends('layouts.guest')
 
-@section('title', $ok ? 'Signed In' : 'Sign-In Failed')
+@section('title', $ok ? __('auth.oidc.client_success_title') : __('auth.oidc.client_failure_title'))
 
 @section('content')
     <div class="card">
@@ -18,14 +18,14 @@
             </span>
 
             <h4 class="rd-auth-title">
-                {{ $ok ? 'Signed in to RustDesk' : 'Sign-in failed' }}
+                {{ $ok ? __('auth.oidc.client_success_heading') : __('auth.oidc.client_failure_heading') }}
             </h4>
 
             <p class="rd-auth-sub mb-0">{{ $message }}</p>
 
             @unless ($ok)
                 <p class="rd-auth-foot-note mt-3">
-                    Return to the RustDesk client and try again, or contact your administrator.
+                    {{ __('auth.oidc.client_failure_help') }}
                 </p>
             @endunless
         </div>
