@@ -75,7 +75,7 @@ class RoleList extends Component
             'require_two_factor' => ['boolean'],
             'permissions' => ['array'],
             'permissions.*' => [Rule::in(Permissions::LEVELS)],
-        ]);
+        ], __('identity.validation.messages'), __('identity.validation.attributes'));
 
         $attributes = [
             'name' => $validated['name'],
@@ -93,7 +93,10 @@ class RoleList extends Component
 
         ConsoleAudit::record(
             $this->editing ? 'role.update' : 'role.create',
-            ($this->editing ? 'Updated' : 'Created').' role '.$role->name.' ['.$this->summarize($role).']',
+            __($this->editing ? 'identity.roles.audit_updated' : 'identity.roles.audit_created', [
+                'name' => $role->name,
+                'permissions' => $this->summarize($role),
+            ], 'en'),
             'role',
             $role->name,
         );
@@ -115,7 +118,7 @@ class RoleList extends Component
 
         ConsoleAudit::record(
             'role.delete',
-            'Deleted role '.$name.' ('.$holders.' user(s) reverted to standard access)',
+            trans_choice('identity.roles.audit_deleted', $holders, ['name' => $name, 'count' => $holders], 'en'),
             'role',
             $name,
         );
@@ -135,7 +138,7 @@ class RoleList extends Component
             ->map(fn ($level, $resource) => $resource.':'.$level)
             ->values();
 
-        return $granted->isEmpty() ? 'no permissions' : $granted->join(', ');
+        return $granted->isEmpty() ? __('identity.roles.audit_no_permissions', [], 'en') : $granted->join(', ');
     }
 
     private function resetForm(): void
@@ -152,10 +155,10 @@ class RoleList extends Component
         return view('livewire.role-list', [
             'roles' => Role::withCount('users')->orderBy('name')->get(),
             'resources' => Permissions::CONSOLE_RESOURCES,
-            'resourceLabels' => Permissions::RESOURCE_LABELS,
-            'resourceHints' => Permissions::RESOURCE_HINTS,
+            'resourceLabels' => Permissions::resourceLabels(),
+            'resourceHints' => Permissions::resourceHints(),
             'levels' => Permissions::LEVELS,
-            'levelLabels' => Permissions::LEVEL_LABELS,
+            'levelLabels' => Permissions::levelLabels(),
         ]);
     }
 }

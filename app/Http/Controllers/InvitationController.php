@@ -39,10 +39,10 @@ class InvitationController extends Controller
             'name' => ['nullable', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'same:password_confirmation'],
             'password_confirmation' => ['required', 'string'],
-        ], [
-            'password.same' => 'The passwords do not match.',
-            'password_confirmation.required' => 'Please confirm your password.',
-        ]);
+        ], array_merge(__('identity.validation.messages'), [
+            'password.same' => __('identity.invite_accept.password_mismatch'),
+            'password_confirmation.required' => __('identity.invite_accept.password_confirmation_required'),
+        ]), __('identity.validation.attributes'));
 
         // Re-check uniqueness at redemption, not just at invite time: the
         // address or username may have been claimed while the invite sat in an
@@ -50,7 +50,7 @@ class InvitationController extends Controller
         if (User::where('username', $invitation->username)->exists()
             || User::where('email', $invitation->email)->exists()) {
             return back()->withErrors([
-                'password' => 'An account already uses this username or email. Contact your administrator.',
+                'password' => __('identity.invite_accept.account_conflict'),
             ]);
         }
 
@@ -67,7 +67,7 @@ class InvitationController extends Controller
                 ->update(['accepted_at' => now()]);
 
             if ($claimed === 0) {
-                abort(410, 'This invitation has already been used.');
+                abort(410, __('identity.invite_accept.already_used'));
             }
 
             $user = User::create([
@@ -109,7 +109,7 @@ class InvitationController extends Controller
         // authenticated, and the new user is the actor here.
         ConsoleAudit::record(
             'user.invite-accept',
-            'Accepted invitation and created user '.$user->username,
+            __('identity.invite_accept.audit_accepted', ['username' => $user->username], 'en'),
             'user',
             $user->username,
         );
@@ -142,7 +142,7 @@ class InvitationController extends Controller
             && (! $invitation->is_admin || $inviter->is_admin);
 
         if (! $stillAuthorised) {
-            abort(403, 'This invitation is no longer valid. Ask an administrator for a new one.');
+            abort(403, __('identity.invite_accept.no_longer_valid'));
         }
 
         return $invitation;

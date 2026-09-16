@@ -8,8 +8,6 @@ use App\Models\Device;
 use App\Models\Role;
 use App\Models\Strategy;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -178,7 +176,7 @@ class UserList extends Component
             'password' => [$this->editing ? 'nullable' : 'required', 'string', 'min:8'],
             'device_group_ids' => ['array'],
             'device_group_ids.*' => [Rule::exists('device_groups', 'id')],
-        ]);
+        ], __('identity.validation.messages'), __('identity.validation.attributes'));
 
         $actor = auth()->user();
         $groupIds = array_map('intval', $validated['device_group_ids'] ?? []);
@@ -259,14 +257,17 @@ class UserList extends Component
         // consequential thing this form can do.
         $roleNote = '';
         if ($previousRoleId !== $user->role_id) {
-            $roleNote = ' (role: '.($user->role_id
+            $roleNote = ' ('.__('identity.common.role', [], 'en').': '.($user->role_id
                 ? (string) Role::whereKey($user->role_id)->value('name')
-                : 'standard user').')';
+                : __('identity.users.audit_standard_user', [], 'en')).')';
         }
 
         ConsoleAudit::record(
             $this->editing ? 'user.update' : 'user.create',
-            ($this->editing ? 'Updated' : 'Created').' user '.$user->username.$roleNote,
+            __($this->editing ? 'identity.users.audit_updated' : 'identity.users.audit_created', [
+                'username' => $user->username,
+                'role' => $roleNote,
+            ], 'en'),
             'user',
             $user->username,
         );
@@ -293,7 +294,9 @@ class UserList extends Component
 
         ConsoleAudit::record(
             $user->is_active ? 'user.enable' : 'user.disable',
-            ($user->is_active ? 'Enabled' : 'Disabled').' user '.$user->username,
+            __($user->is_active ? 'identity.users.audit_enabled' : 'identity.users.audit_disabled', [
+                'username' => $user->username,
+            ], 'en'),
             'user',
             $user->username,
         );
@@ -317,7 +320,12 @@ class UserList extends Component
 
         $user->clearTwoFactor();
 
-        ConsoleAudit::record('user.2fa-reset', 'Reset two-factor authentication for '.$user->username, 'user', $user->username);
+        ConsoleAudit::record(
+            'user.2fa-reset',
+            __('identity.users.audit_two_factor_reset', ['username' => $user->username], 'en'),
+            'user',
+            $user->username,
+        );
     }
 
     /** Kick a user everywhere: RustDesk clients, console sessions, remember-me. */
@@ -333,7 +341,12 @@ class UserList extends Component
         $this->guardTarget($user);
         $this->revokeAllAccess($user);
 
-        ConsoleAudit::record('user.force-logout', 'Forced logout of '.$user->username, 'user', $user->username);
+        ConsoleAudit::record(
+            'user.force-logout',
+            __('identity.users.audit_force_logout', ['username' => $user->username], 'en'),
+            'user',
+            $user->username,
+        );
     }
 
     /** Delegates to the model so reset and force-logout cannot drift apart. */
@@ -358,7 +371,12 @@ class UserList extends Component
         $user->devices()->update(['user_id' => null]);
         $user->delete();
 
-        ConsoleAudit::record('user.delete', 'Deleted user '.$username, 'user', $username);
+        ConsoleAudit::record(
+            'user.delete',
+            __('identity.users.audit_deleted', ['username' => $username], 'en'),
+            'user',
+            $username,
+        );
     }
 
     // --- Assign devices (bulk owner reassignment) ----------------------------
@@ -424,7 +442,7 @@ class UserList extends Component
 
         ConsoleAudit::record(
             'user.assign-devices',
-            'Assigned '.count($ids).' device(s) to '.$user->username,
+            trans_choice('identity.users.audit_assigned', count($ids), ['count' => count($ids), 'username' => $user->username], 'en'),
             'user',
             $user->username,
         );

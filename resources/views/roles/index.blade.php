@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Roles')
-@section('subtitle', 'Manage')
+@section('title', __('identity.roles.title'))
+@section('subtitle', __('identity.roles.subtitle'))
 
 @section('content')
     @livewire(App\Livewire\RoleList::class)

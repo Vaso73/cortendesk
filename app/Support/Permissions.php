@@ -22,36 +22,34 @@ final class Permissions
     /** Permission levels, ordered by increasing capability. */
     public const LEVELS = ['none', 'r', 'rw'];
 
-    /** How the console renders each level. */
-    public const LEVEL_LABELS = ['none' => 'None', 'r' => 'View', 'rw' => 'Manage'];
-
     /** Console areas a role can grant. Superset of ApiToken::RESOURCES. */
     public const CONSOLE_RESOURCES = [
         'device', 'user', 'group', 'address_book', 'audit', 'strategy', 'setting', 'token',
     ];
 
-    public const RESOURCE_LABELS = [
-        'device' => 'Devices',
-        'user' => 'Users',
-        'group' => 'Groups',
-        'address_book' => 'Address books',
-        'audit' => 'Logs',
-        'strategy' => 'Strategies',
-        'setting' => 'Settings',
-        'token' => 'API tokens',
-    ];
+    /** Localized labels for stable permission resource identifiers. */
+    public static function resourceLabels(): array
+    {
+        return collect(self::CONSOLE_RESOURCES)
+            ->mapWithKeys(fn (string $resource) => [$resource => __("identity.permissions.resources.{$resource}")])
+            ->all();
+    }
 
-    /** One-line explanation of what each area actually unlocks, for the editor. */
-    public const RESOURCE_HINTS = [
-        'device' => 'View grants the Devices screen; Manage adds edit, approve, delete and restore. Which devices are listed is still decided by device-group access, never by the role.',
-        'user' => 'Manage covers creating, editing, disabling and deleting users, and inviting new ones. Only a full administrator can grant administrator or assign roles.',
-        'group' => 'Covers both device groups and user groups, matching the API token matrix.',
-        'address_book' => 'View grants the Address Books screen; Manage adds books, tags, entries and sharing rules. Per-book sharing rules still apply on top.',
-        'audit' => 'View grants Connections, File Transfers and Alarms. Manage also grants Login history and the Console audit trail.',
-        'strategy' => 'Client strategies pushed to devices over the heartbeat.',
-        'setting' => 'Server settings, SSO, SMTP, retention and the sidebar version banner.',
-        'token' => 'Tokens for the automation REST API. A new token can never be granted more than its creator already has.',
-    ];
+    /** Localized explanations of what each permission unlocks. */
+    public static function resourceHints(): array
+    {
+        return collect(self::CONSOLE_RESOURCES)
+            ->mapWithKeys(fn (string $resource) => [$resource => __("identity.permissions.hints.{$resource}")])
+            ->all();
+    }
+
+    /** Localized labels for stable permission level identifiers. */
+    public static function levelLabels(): array
+    {
+        return collect(self::LEVELS)
+            ->mapWithKeys(fn (string $level) => [$level => __("identity.permissions.levels.{$level}")])
+            ->all();
+    }
 
     /**
      * The capability a user with no role has always had, and still has: full

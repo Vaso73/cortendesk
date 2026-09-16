@@ -1,27 +1,26 @@
 <div>
     @php
         $resourceLabels = [
-            'device' => 'Devices',
-            'user' => 'Users',
-            'group' => 'Groups',
-            'strategy' => 'Strategies',
-            'address_book' => 'Address books',
-            'audit' => 'Audit logs',
+            'device' => __('identity.permissions.resources.device'),
+            'user' => __('identity.permissions.resources.user'),
+            'group' => __('identity.permissions.resources.group'),
+            'strategy' => __('identity.permissions.resources.strategy'),
+            'address_book' => __('identity.permissions.resources.address_book'),
+            'audit' => __('identity.permissions.resources.audit'),
         ];
-        $levelLabels = ['none' => 'None', 'r' => 'Read', 'rw' => 'Read/Write'];
+        $levelLabels = ['none' => __('identity.common.none'), 'r' => __('identity.common.read'), 'rw' => __('identity.common.read_write')];
     @endphp
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">
             <div>
-                <h4 class="header-title">API Tokens</h4>
-                <p class="rd-card-sub mb-0">Scoped Bearer tokens for the automation REST API (<code>/api/v1/…</code>).
-                    Grant each token only the resources your scripts need. See <code>docs/admin-api.md</code>.</p>
+                <h4 class="header-title">{{ __('identity.api_tokens.title') }}</h4>
+                <p class="rd-card-sub mb-0">{{ __('identity.api_tokens.intro', ['path' => '/api/v1/…', 'docs' => 'docs/admin-api.md']) }}</p>
             </div>
             @if (auth()->user()?->consoleAllows('token', 'rw'))
                 <div class="rd-card-actions">
                     <button type="button" class="btn btn-primary" wire:click="create">
-                        <i class="ri-add-line"></i>New Token
+                        <i class="ri-add-line"></i>{{ __('identity.api_tokens.new') }}
                     </button>
                 </div>
             @endif
@@ -33,14 +32,14 @@
                 <div class="alert alert-success mb-0 w-100">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="me-2">
-                            <strong><i class="ri-check-line me-1"></i>Token created.</strong>
-                            <div class="fs-13">Copy it now — it is shown only once and cannot be retrieved later.</div>
+                            <strong><i class="ri-check-line me-1"></i>{{ __('identity.api_tokens.created') }}</strong>
+                            <div class="fs-13">{{ __('identity.api_tokens.copy_once') }}</div>
                         </div>
-                        <button type="button" class="btn-close" wire:click="dismissPlaintext" aria-label="Dismiss"></button>
+                        <button type="button" class="btn-close" wire:click="dismissPlaintext" aria-label="{{ __('identity.common.dismiss') }}"></button>
                     </div>
                     <div class="input-group input-group-sm mt-2">
                         <input type="text" class="form-control font-monospace" readonly value="{{ $plaintext }}">
-                        <button class="btn btn-light" type="button"
+                        <button class="btn btn-light" type="button" aria-label="{{ __('identity.common.copy') }}"
                                 onclick="rdCopyPrevious(this)">
                             <i class="ri-file-copy-line"></i>
                         </button>
@@ -54,12 +53,12 @@
                 <table class="table table-hover table-centered mb-0">
                     <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Permissions</th>
-                        <th>Created by</th>
-                        <th>Last used</th>
-                        <th>Expires</th>
-                        <th class="text-end">Action</th>
+                        <th>{{ __('identity.common.name') }}</th>
+                        <th>{{ __('identity.common.permissions') }}</th>
+                        <th>{{ __('identity.api_tokens.created_by') }}</th>
+                        <th>{{ __('identity.api_tokens.last_used') }}</th>
+                        <th>{{ __('identity.common.expires') }}</th>
+                        <th class="text-end">{{ __('identity.common.action') }}</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -78,7 +77,7 @@
                                 @foreach ($token->permissions as $res => $lvl)
                                     @if ($lvl !== 'none')
                                         <span class="badge {{ $lvl === 'rw' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary' }}">
-                                            {{ $resourceLabels[$res] ?? $res }}: {{ strtoupper($lvl) }}
+                                            {{ $resourceLabels[$res] ?? $res }}: {{ $levelLabels[$lvl] ?? $lvl }}
                                         </span>
                                     @endif
                                 @endforeach
@@ -88,7 +87,7 @@
                                 @if ($token->last_used_at)
                                     <span title="{{ $token->last_used_at }}">{{ $token->last_used_at->diffForHumans() }}</span>
                                 @else
-                                    <span class="text-muted">Never</span>
+                                    <span class="text-muted">{{ __('identity.common.never') }}</span>
                                 @endif
                             </td>
                             <td>
@@ -97,14 +96,14 @@
                                         {{ $token->expires_at->format('Y-m-d') }}
                                     </span>
                                 @else
-                                    <span class="text-muted">Never</span>
+                                    <span class="text-muted">{{ __('identity.common.never') }}</span>
                                 @endif
                             </td>
                             <td class="text-end rd-rowact">
                                 @if (auth()->user()?->consoleAllows('token', 'rw'))
                                     <a href="javascript:void(0);" class="text-danger"
                                        wire:click="revoke({{ $token->id }})"
-                                       wire:confirm="Revoke token “{{ $token->name }}”? Any script using it stops working immediately.">Revoke</a>
+                                       wire:confirm="{{ __('identity.api_tokens.revoke_confirm', ['name' => $token->name]) }}">{{ __('identity.common.revoke') }}</a>
                                 @endif
                             </td>
                         </tr>
@@ -113,10 +112,10 @@
                             <td colspan="6" class="rd-empty-cell">
                                 <div class="rd-empty">
                                     <div class="rd-empty-icon"><i class="ri-key-2-line"></i></div>
-                                    <p class="rd-empty-title">No API tokens yet.</p>
-                                    <p class="rd-empty-text">A token lets a script talk to the console API without a password.</p>
+                                    <p class="rd-empty-title">{{ __('identity.api_tokens.empty') }}</p>
+                                    <p class="rd-empty-text">{{ __('identity.api_tokens.empty_help') }}</p>
                                     @if (auth()->user()?->consoleAllows('token', 'rw'))
-                                        <button type="button" class="btn btn-sm btn-outline-light" wire:click="create">New Token</button>
+                                        <button type="button" class="btn btn-sm btn-outline-light" wire:click="create">{{ __('identity.api_tokens.new') }}</button>
                                     @endif
                                 </div>
                             </td>
@@ -136,9 +135,9 @@
                                     <span class="rd-mini-sub rd-mono">{{ $token->token_prefix }}…</span>
                                 </div>
                                 @if (auth()->user()?->consoleAllows('token', 'rw'))
-                                    <a href="javascript:void(0);" class="rd-iconbtn text-danger flex-shrink-0" title="Revoke"
+                                    <a href="javascript:void(0);" class="rd-iconbtn text-danger flex-shrink-0" title="{{ __('identity.common.revoke') }}"
                                        wire:click="revoke({{ $token->id }})"
-                                       wire:confirm="Revoke token “{{ $token->name }}”? Any script using it stops working immediately.">
+                                       wire:confirm="{{ __('identity.api_tokens.revoke_confirm', ['name' => $token->name]) }}">
                                         <i class="ri-delete-bin-line"></i>
                                     </a>
                                 @endif
@@ -147,22 +146,22 @@
                                 @foreach ($token->permissions as $res => $lvl)
                                     @if ($lvl !== 'none')
                                         <span class="badge {{ $lvl === 'rw' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary' }}">
-                                            {{ $resourceLabels[$res] ?? $res }}: {{ strtoupper($lvl) }}
+                                            {{ $resourceLabels[$res] ?? $res }}: {{ $levelLabels[$lvl] ?? $lvl }}
                                         </span>
                                     @endif
                                 @endforeach
                             </div>
                             <span class="rd-mini-sub mt-2">
-                                Last used: {{ $token->last_used_at ? $token->last_used_at->diffForHumans() : 'never' }} ·
-                                Expires: {{ $token->expires_at ? $token->expires_at->format('Y-m-d') : 'never' }}
+                                {{ __('identity.api_tokens.last_used_value', ['value' => $token->last_used_at ? $token->last_used_at->diffForHumans() : __('identity.common.never')]) }} ·
+                                {{ __('identity.api_tokens.expires_value', ['value' => $token->expires_at ? $token->expires_at->format('Y-m-d') : __('identity.common.never')]) }}
                             </span>
                     </div>
                 @empty
                     <div class="rd-empty">
                         <div class="rd-empty-icon"><i class="ri-key-2-line"></i></div>
-                        <p class="rd-empty-title">No API tokens yet.</p>
+                        <p class="rd-empty-title">{{ __('identity.api_tokens.empty') }}</p>
                         @if (auth()->user()?->consoleAllows('token', 'rw'))
-                            <button type="button" class="btn btn-sm btn-outline-light" wire:click="create">New Token</button>
+                            <button type="button" class="btn btn-sm btn-outline-light" wire:click="create">{{ __('identity.api_tokens.new') }}</button>
                         @endif
                     </div>
                 @endforelse
@@ -176,30 +175,29 @@
                 <div class="modal-content">
                     <form wire:submit="save">
                         <div class="modal-header">
-                            <h5 class="modal-title">New API Token</h5>
-                            <button type="button" class="btn-close" wire:click="closeModal" aria-label="Close"></button>
+                            <h5 class="modal-title">{{ __('identity.api_tokens.modal') }}</h5>
+                            <button type="button" class="btn-close" wire:click="closeModal" aria-label="{{ __('identity.common.close') }}"></button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label class="form-label" for="at-name">Name <span class="text-danger">*</span></label>
+                                <label class="form-label" for="at-name">{{ __('identity.common.name') }} <span class="text-danger">*</span></label>
                                 <input type="text" id="at-name" class="form-control @error('name') is-invalid @enderror"
-                                       wire:model="name" placeholder="e.g. Ansible provisioning" autocomplete="off">
+                                       wire:model="name" placeholder="{{ __('identity.api_tokens.name_placeholder') }}" autocomplete="off">
                                 @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="at-expires">Expires in (days)</label>
+                                <label class="form-label" for="at-expires">{{ __('identity.api_tokens.expires_days') }}</label>
                                 <input type="number" id="at-expires" min="1" max="3650" style="max-width:160px;"
                                        class="form-control @error('expiresDays') is-invalid @enderror"
-                                       wire:model="expiresDays" placeholder="Never">
+                                       wire:model="expiresDays" placeholder="{{ __('identity.api_tokens.never_placeholder') }}">
                                 @error('expiresDays') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                <div class="form-text">Leave blank for a token that never expires.</div>
+                                <div class="form-text">{{ __('identity.api_tokens.expires_help') }}</div>
                             </div>
 
-                            <label class="form-label">Permissions</label>
+                            <label class="form-label">{{ __('identity.common.permissions') }}</label>
                             @unless (auth()->user()?->is_admin)
-                                <div class="form-text mb-1">A token can never be granted more than you hold yourself —
-                                    anything above your own level is reduced when the token is created.</div>
+                                <div class="form-text mb-1">{{ __('identity.api_tokens.permission_ceiling') }}</div>
                             @endunless
                             @error('permissions') <div class="text-danger fs-13 mb-1">{{ $message }}</div> @enderror
                             {{-- Desktop: radio grid --}}
@@ -207,10 +205,10 @@
                                 <table class="table table-sm table-centered mb-0">
                                     <thead>
                                     <tr>
-                                        <th>Resource</th>
-                                        <th class="text-center">None</th>
-                                        <th class="text-center">Read</th>
-                                        <th class="text-center">Read/Write</th>
+                                        <th>{{ __('identity.permissions.resource') }}</th>
+                                        <th class="text-center">{{ __('identity.common.none') }}</th>
+                                        <th class="text-center">{{ __('identity.common.read') }}</th>
+                                        <th class="text-center">{{ __('identity.common.read_write') }}</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -245,10 +243,10 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-light" wire:click="closeModal">Cancel</button>
+                            <button type="button" class="btn btn-light" wire:click="closeModal">{{ __('identity.common.cancel') }}</button>
                             <button type="submit" class="btn btn-primary">
-                                <span wire:loading.remove wire:target="save"><i class="ri-key-2-line me-1"></i>Create Token</span>
-                                <span wire:loading wire:target="save">Creating…</span>
+                                <span wire:loading.remove wire:target="save"><i class="ri-key-2-line me-1"></i>{{ __('identity.api_tokens.create') }}</span>
+                                <span wire:loading wire:target="save">{{ __('identity.api_tokens.creating') }}</span>
                             </button>
                         </div>
                     </form>

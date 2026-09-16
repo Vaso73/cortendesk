@@ -53,11 +53,11 @@ class ApiTokenManager extends Component
             'expiresDays' => ['nullable', 'integer', 'min:1', 'max:3650'],
             'permissions' => ['array'],
             'permissions.*' => [Rule::in(ApiToken::LEVELS)],
-        ]);
+        ], __('identity.validation.messages'), __('identity.validation.attributes'));
 
         // Reject an all-"none" token: it could do nothing.
         if (! collect($this->permissions)->contains(fn ($l) => $l !== 'none')) {
-            $this->addError('permissions', 'Grant at least one resource permission.');
+            $this->addError('permissions', __('identity.api_tokens.validation_permission'));
 
             return;
         }
@@ -69,7 +69,12 @@ class ApiTokenManager extends Component
             $this->expiresDays ? now()->addDays($this->expiresDays) : null,
         );
 
-        ConsoleAudit::record('api-token.create', 'Created API token '.$token->name, 'api_token', (string) $token->id);
+        ConsoleAudit::record(
+            'api-token.create',
+            __('identity.api_tokens.audit_created', ['name' => $token->name], 'en'),
+            'api_token',
+            (string) $token->id,
+        );
 
         $this->plaintext = $plain;
         $this->showModal = false;
@@ -89,7 +94,12 @@ class ApiTokenManager extends Component
         $name = $token->name;
         $token->delete();
 
-        ConsoleAudit::record('api-token.revoke', 'Revoked API token '.$name, 'api_token', (string) $id);
+        ConsoleAudit::record(
+            'api-token.revoke',
+            __('identity.api_tokens.audit_revoked', ['name' => $name], 'en'),
+            'api_token',
+            (string) $id,
+        );
     }
 
     public function dismissPlaintext(): void
