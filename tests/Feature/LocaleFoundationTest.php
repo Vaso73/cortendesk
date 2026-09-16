@@ -156,7 +156,7 @@ class LocaleFoundationTest extends TestCase
         }
     }
 
-    public function test_registry_declares_spanish_and_german_without_weakening_en_or_sk(): void
+    public function test_registry_declares_the_five_community_locales_without_weakening_en_or_sk(): void
     {
         $locales = config('locales.supported');
 
@@ -165,7 +165,10 @@ class LocaleFoundationTest extends TestCase
         $this->assertArrayNotHasKey('community', $locales['sk']);
         $this->assertSame(['Español', ['es-ES', 'es-MX']], [$locales['es']['native_name'], $locales['es']['aliases']]);
         $this->assertSame(['Deutsch', ['de-DE', 'de-AT', 'de-CH']], [$locales['de']['native_name'], $locales['de']['aliases']]);
-        foreach (['es', 'de'] as $locale) {
+        $this->assertSame(['Русский', ['ru-RU']], [$locales['ru']['native_name'], $locales['ru']['aliases']]);
+        $this->assertSame(['Français', ['fr-FR', 'fr-CA']], [$locales['fr']['native_name'], $locales['fr']['aliases']]);
+        $this->assertSame(['Italiano', ['it-IT']], [$locales['it']['native_name'], $locales['it']['aliases']]);
+        foreach (['es', 'de', 'ru', 'fr', 'it'] as $locale) {
             $this->assertTrue($locales[$locale]['community']);
             $this->assertSame('ltr', $locales[$locale]['dir']);
         }
