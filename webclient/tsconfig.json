@@ -21,6 +21,6 @@
     "noEmit": true,
     "sourceMap": true
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "scripts/**/*.d.mts"],
   "exclude": ["node_modules", "../public"]
 }
