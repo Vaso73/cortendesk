@@ -82,111 +82,32 @@ class StrategyList extends Component
     /** @var array<int,int|string> */
     public array $assignGroupIds = [];
 
-    /** Section titles + the apply-timing caveat that belongs to each group. */
-    private const GROUP_META = [
-        'permissions' => [
-            'title' => 'Permissions',
-            'icon' => 'ri-shield-keyhole-line',
-            'help' => 'What an incoming session may do. Applied when the next session is authorised — sessions already running keep the values they started with.',
-        ],
-        'security' => [
-            'title' => 'Security & password',
-            'icon' => 'ri-lock-password-line',
-            'help' => 'How the device authorises incoming connections. Most of these take effect within one heartbeat; the two password-shape options only apply the next time the one-time password is regenerated.',
-        ],
-        'display' => [
-            'title' => 'Capture & display',
-            'icon' => 'ri-macbook-line',
-            'help' => 'Screen capture and desktop behaviour during a session.',
-        ],
-        'client' => [
-            'title' => 'Client & updates',
-            'icon' => 'ri-refresh-line',
-            'help' => 'How the RustDesk client maintains itself. Unlike the groups above, these are not about an incoming session.',
-        ],
+    /** Icons remain technical; all visible catalogue text lives in the locale. */
+    private const GROUP_ICONS = [
+        'permissions' => 'ri-shield-keyhole-line',
+        'security' => 'ri-lock-password-line',
+        'display' => 'ri-macbook-line',
+        'client' => 'ri-refresh-line',
     ];
 
-    /**
-     * Labels, help text and enum wording. Keyed by the option key so a key that
-     * is not in the allowlist can never gain a control by being described here.
-     *
-     * @var array<string,array{label:string,help?:string,choices?:array<string,string>}>
-     */
-    private const OPTION_META = [
-        'access-mode' => [
-            'label' => 'Access mode',
-            'help' => 'Master switch. "Full" forces every permission below on and "View only" forces them all off, whatever the individual controls say. Desktop only — ignored by the Android and iOS clients.',
-            'choices' => ['full' => 'Full access', 'view' => 'View only', 'custom' => 'Custom (use the controls below)'],
-        ],
-        'enable-keyboard' => ['label' => 'Keyboard & mouse'],
-        'enable-clipboard' => ['label' => 'Clipboard'],
-        'enable-file-transfer' => ['label' => 'File transfer'],
-        'enable-audio' => ['label' => 'Audio'],
-        'enable-camera' => ['label' => 'Camera'],
-        'enable-terminal' => ['label' => 'Terminal'],
-        'enable-tunnel' => ['label' => 'TCP tunnelling'],
-        'enable-remote-restart' => ['label' => 'Remote restart'],
-        'enable-record-session' => ['label' => 'Session recording', 'help' => 'Whether the connecting side is permitted to record.'],
-        'enable-block-input' => ['label' => 'Block local input', 'help' => 'Windows only in the client UI.'],
-        'enable-privacy-mode' => ['label' => 'Privacy mode'],
-        'enable-remote-printer' => ['label' => 'Remote printing', 'help' => 'Windows only. Re-checked per print job, so it takes effect mid-session.'],
+    /** Options with explanatory help text. */
+    private const OPTIONS_WITH_HELP = [
+        'access-mode', 'enable-record-session', 'enable-block-input', 'enable-remote-printer',
+        'temporary-password-length', 'allow-numeric-one-time-password', 'whitelist',
+        'allow-only-conn-window-open', 'allow-remote-config-modification', 'allow-auto-update',
+        'auto-disconnect-timeout', 'allow-remove-wallpaper',
+    ];
 
+    /** Locale key suffixes for protocol enum values. */
+    private const CHOICE_KEYS = [
+        'access-mode' => ['full' => 'full', 'view' => 'view', 'custom' => 'custom'],
         'verification-method' => [
-            'label' => 'Password type',
-            'choices' => [
-                'use-temporary-password' => 'One-time password only',
-                'use-permanent-password' => 'Permanent password only',
-                'use-both-passwords' => 'Either password',
-            ],
+            'use-temporary-password' => 'temp',
+            'use-permanent-password' => 'permanent',
+            'use-both-passwords' => 'both',
         ],
-        'approve-mode' => [
-            'label' => 'How connections are approved',
-            'choices' => [
-                'password' => 'Password only',
-                'click' => 'Accept on the device only',
-                'password-click' => 'Password or accept on the device',
-            ],
-        ],
-        'temporary-password-length' => [
-            'label' => 'One-time password length',
-            'help' => 'Applies the next time the password is regenerated, not immediately.',
-            'choices' => ['6' => '6 characters', '8' => '8 characters', '10' => '10 characters'],
-        ],
-        'allow-numeric-one-time-password' => [
-            'label' => 'Digits-only one-time password',
-            'help' => 'Applies at the next regeneration.',
-        ],
-        'whitelist' => [
-            'label' => 'IP whitelist',
-            'help' => 'Comma-separated IPs or CIDRs that may connect; empty means allow all. Entries that do not parse simply never match, so a typo here can lock everyone out of the device.',
-        ],
-        'allow-only-conn-window-open' => ['label' => 'Only accept while the client window is open', 'help' => 'Desktop only.'],
-        'enable-trusted-devices' => ['label' => 'Offer "trust this device" on 2FA'],
-        // Client wording is "Enable remote configuration modification". Ours
-        // said only what it does, which reads better but meant nobody looking
-        // for the client's term could find it (#11). Lead with the client's
-        // label, keep the plain-English explanation as help.
-        'allow-remote-config-modification' => [
-            'label' => 'Enable remote configuration modification',
-            'help' => 'Lets the connecting side change this device\'s settings during a session.',
-        ],
-        'allow-auto-update' => [
-            'label' => 'Auto update',
-            'help' => 'Lets the client update itself. The client only exposes this on installed Windows, and on installed macOS that is not a custom build — elsewhere (Linux, portable installs, custom-branded builds) the toggle is hidden, so setting it here may have no visible effect.',
-        ],
-        'allow-auto-disconnect' => ['label' => 'Disconnect idle sessions'],
-        'auto-disconnect-timeout' => [
-            'label' => 'Idle timeout (minutes)',
-            'help' => 'Only read when idle disconnect is on. 1–1440.',
-        ],
-        'allow-scope-violation-alarm' => ['label' => 'Raise an alarm on an out-of-scope message'],
-        'allow-scope-violation-close' => ['label' => 'Close the session on an out-of-scope message'],
-
-        'enable-abr' => ['label' => 'Adaptive bitrate'],
-        'allow-remove-wallpaper' => ['label' => 'Remove the wallpaper during a session', 'help' => 'Windows and Linux.'],
-        'allow-auto-record-incoming' => ['label' => 'Record incoming sessions automatically'],
-        'keep-awake-during-incoming-sessions' => ['label' => 'Keep the device awake during a session'],
-        'enable-lan-discovery' => ['label' => 'Answer LAN discovery'],
+        'approve-mode' => ['password' => 'password', 'click' => 'click', 'password-click' => 'password_click'],
+        'temporary-password-length' => ['6' => '6', '8' => '8', '10' => '10'],
     ];
 
     /**
@@ -258,8 +179,10 @@ class StrategyList extends Component
             if ($spec['type'] === 'int' && ! (ctype_digit($value)
                 && (int) $value >= ($spec['min'] ?? 0)
                 && (int) $value <= ($spec['max'] ?? PHP_INT_MAX))) {
-                $this->addError('formOptions.'.$key, 'Enter a whole number between '
-                    .($spec['min'] ?? 0).' and '.($spec['max'] ?? PHP_INT_MAX).'.');
+                $this->addError('formOptions.'.$key, __('settings.strategies.number_range', [
+                    'min' => $spec['min'] ?? 0,
+                    'max' => $spec['max'] ?? PHP_INT_MAX,
+                ]));
 
                 continue;
             }
@@ -583,27 +506,35 @@ class StrategyList extends Component
             $options = [];
 
             foreach ($keys as $key => $spec) {
-                $meta = self::OPTION_META[$key] ?? [];
-                // `allow-*` keys read as a permission, the rest as a switch.
-                $on = str_starts_with($key, 'allow-') ? 'Allowed' : 'Enabled';
-                $off = str_starts_with($key, 'allow-') ? 'Not allowed' : 'Disabled';
-
+                $choiceKeys = self::CHOICE_KEYS[$key] ?? [];
                 $choices = match ($spec['type']) {
-                    'bool' => ['Y' => $on, 'N' => $off],
-                    'enum' => $meta['choices'] ?? [],
+                    'bool' => [
+                        'Y' => __(str_starts_with($key, 'allow-') ? 'settings.strategies.choices.allowed' : 'settings.strategies.choices.enabled'),
+                        'N' => __(str_starts_with($key, 'allow-') ? 'settings.strategies.choices.not_allowed' : 'settings.strategies.choices.disabled'),
+                    ],
+                    'enum' => collect($choiceKeys)->mapWithKeys(fn (string $localeKey, string $value) => [
+                        $value => __('settings.strategies.choices.'.$localeKey),
+                    ])->all(),
                     default => null,
                 };
 
                 $options[$key] = [
                     'key' => $key,
                     'type' => $spec['type'],
-                    'label' => $meta['label'] ?? $key,
-                    'help' => $meta['help'] ?? null,
+                    'label' => __('settings.strategies.catalog.'.$key.'.label'),
+                    'help' => in_array($key, self::OPTIONS_WITH_HELP, true)
+                        ? __('settings.strategies.catalog.'.$key.'.help')
+                        : null,
                     'choices' => $choices,
                 ];
             }
 
-            $catalog[$group] = self::GROUP_META[$group] + ['options' => $options];
+            $catalog[$group] = [
+                'title' => __('settings.strategies.groups.'.$group.'.title'),
+                'icon' => self::GROUP_ICONS[$group],
+                'help' => __('settings.strategies.groups.'.$group.'.help'),
+                'options' => $options,
+            ];
         }
 
         return $catalog;

@@ -50,7 +50,7 @@ class SetupWizard extends Component
         $this->refreshDeviceStatus();
 
         if (! $this->deviceConnected) {
-            $this->addError('device', 'Connect a RustDesk device before completing setup.');
+            $this->addError('device', __('settings.setup.connect_first'));
 
             return;
         }

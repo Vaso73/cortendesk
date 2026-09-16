@@ -146,8 +146,9 @@ class ClientDownloadManager extends Component
             // the bytes that are already there.
             'file' => [$this->editing ? 'nullable' : 'required', 'file', 'max:'.$maxKb, function ($attribute, $value, $fail) {
                 if ($value && ! ClientPlatform::extensionAllowed($value->getClientOriginalName())) {
-                    $fail('That file type is not an installer CortenDesk will hand out. Allowed: '
-                        .implode(', ', ClientPlatform::allowedExtensions()).'.');
+                    $fail(__('settings.downloads.invalid_type', [
+                        'extensions' => implode(', ', ClientPlatform::allowedExtensions()),
+                    ]));
                 }
             }],
             'label' => ['required', 'string', 'max:120'],
@@ -156,9 +157,7 @@ class ClientDownloadManager extends Component
             'version' => ['nullable', 'string', 'max:64'],
             'notes' => ['nullable', 'string', 'max:500'],
         ], [
-            'file.max' => 'That build is larger than the '.round($maxKb / 1024).' MB upload limit. '
-                .'Raise upload_max_filesize/post_max_size in docker/php.ini and client_max_body_size '
-                .'in docker/nginx.conf.template together, then CORTENDESK_DOWNLOADS_MAX_KB.',
+            'file.max' => __('settings.downloads.too_large', ['size' => round($maxKb / 1024)]),
         ]);
 
         $download = $this->editing ? ClientDownload::findOrFail($this->editing) : new ClientDownload;

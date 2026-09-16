@@ -197,9 +197,9 @@ class StrategyCompliance
         return [
             'id' => $device->id,
             'rustdesk_id' => $device->rustdesk_id,
-            'label' => $device->alias ?: $device->hostname ?: 'Unlabelled',
+            'label' => $device->alias ?: $device->hostname ?: __('settings.strategies.unlabelled'),
             'state' => $state,
-            'last_online' => $this->when($device->last_online_at) ?? 'Never',
+            'last_online' => $this->when($device->last_online_at) ?? __('settings.common.never'),
             'sent' => $this->when($device->strategy_sent_at) ?? '—',
             'confirmed' => $this->when($device->strategy_acked_at) ?? '—',
         ];
@@ -207,6 +207,6 @@ class StrategyCompliance
 
     private function when(?Carbon $at): ?string
     {
-        return $at?->timezone(config('app.timezone'))->format('M j, Y g:i A T');
+        return $at?->timezone(config('app.timezone'))->locale(app()->getLocale())->isoFormat('L LT');
     }
 }

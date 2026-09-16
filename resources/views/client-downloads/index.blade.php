@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Client Downloads')
-@section('subtitle', 'System')
+@section('title', __('settings.downloads.title'))
+@section('subtitle', __('settings.common.system'))
 
 @section('content')
     @livewire(App\Livewire\ClientDownloadManager::class)
